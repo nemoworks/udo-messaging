@@ -1,6 +1,7 @@
 package info.nemoworks.udo.messaging;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.stereotype.Component;
 
@@ -16,15 +17,12 @@ public class Subscriber {
         this.client = client;
     }
 
-    public void subscribe(String mqttTopic) throws MqttException {
+    public void subscribe(String mqttTopic, IMqttMessageListener listener) throws MqttException {
         if (!client.isConnected()) {
             client.connect();
         }
 
-        client.subscribe(mqttTopic, (topic, msg) -> {
-            byte[] payload = msg.getPayload();
-            log.info("Message received: topic={}, payload={}", topic, new String(payload));
-        });
+        client.subscribe(mqttTopic, listener);
     }
 
 }

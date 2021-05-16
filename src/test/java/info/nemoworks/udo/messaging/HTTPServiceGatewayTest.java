@@ -12,6 +12,9 @@ import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class HTTPServiceGatewayTest {
     private HttpClient client;
 
@@ -24,9 +27,9 @@ public class HTTPServiceGatewayTest {
     @Test
     public void testHttpRequestAsync(){
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://baidu.com"))
+                .uri(URI.create("https://my-json-server.typicode.com/typicode/demo/posts/1"))
                 .timeout(Duration.ofMinutes(2)).build();
         client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
-                .thenAccept(System.out::println);
+                .thenAccept(log::info);
     }
 }

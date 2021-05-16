@@ -1,13 +1,16 @@
 package info.nemoworks.udo.messaging;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import info.nemoworks.udo.model.Udo;
 
 public abstract class UdoGateway {
 
-    private Map<String, List<Udo>> udoinapp;
+    private Set<Udo> udos;
+
+    public boolean forUdo(Udo udo){
+        return this.udos.contains(udo);
+    }
 
     protected MessagingManager messagingManager;
 
@@ -20,7 +23,7 @@ public abstract class UdoGateway {
 
     //messaging back to manager
     protected void uplink(String appId, Udo udo, byte[] payload) {
-        this.messagingManager.publish(appId, udo, payload);
+        this.messagingManager.handleUplink(appId, udo, payload);
     }
 
 }

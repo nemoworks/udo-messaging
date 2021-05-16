@@ -1,5 +1,7 @@
 package info.nemoworks.udo.messaging;
 
+import java.util.Set;
+
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -21,6 +23,8 @@ public class MessagingManager {
     @Autowired
     private EventBus eventBus;
 
+    private Set<UdoGateway> gateways;
+
     private static final String PREFIX_UDO = "udo";
 
     public MessagingManager() {
@@ -29,16 +33,26 @@ public class MessagingManager {
 
     // <pub_topic, sub_topic>
     private Pair<String, String> getMqttTopic(String appId, Udo udo) {
-
         return new Pair<>(PREFIX_UDO + "/" + "app" + appId + "/" + udo.getId(), PREFIX_UDO + "/" + "app" + appId);
     }
 
     public void registerUdoInAppContext(Udo udo, String appId) throws MqttException {
+
         udo.getContextInfo().addContext(appId, getMqttTopic(appId, udo));
-        subscriber.subscribe(getMqttTopic(appId, udo).getValue1());
+
+        subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
+
+            for (UdoGateway udoGateway : gateways) {
+
+                if (udoGateway.forUdo(udo)) {
+                    udoGateway.downlink(appId, udo, payload.getPayload());
+                }
+
+            }
+        });
     }
 
-    public void publish(String appId, Udo udo, byte[] payload) {
+    public synchronized void handleUplink(String appId, Udo udo, byte[] payload) {
         try {
             this.publisher.publish(getMqttTopic(appId, udo).getValue0(), payload);
         } catch (MqttException e) {
@@ -47,13 +61,14 @@ public class MessagingManager {
     }
 
     @Subscribe
-    public void udoEvent(UdoEvent event) {
+    public synchronized void handleUdoEvent(UdoEvent event) {
         try {
             this.publisher.publish(event.getSource().getContextInfo().getContext(event.getContextId()).toString(),
                     event.getPayload());
         } catch (MqttException e) {
             e.printStackTrace();
         }
+
     }
 
 }

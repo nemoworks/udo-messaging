@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
@@ -24,9 +25,12 @@ public class HTTPServiceGateway extends UdoGateway {
 
     @Override
     public void downlink(String appId, Udo udo, byte[] payload) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://my-json-server.typicode.com/typicode/demo/posts"))
-                .timeout(Duration.ofMinutes(2)).build();
+
+        String uri = udo.getMetaInfo().uri.isEmpty() ? udo.getMetaInfo().uri
+                : "https://my-json-server.typicode.com/typicode/demo/posts/1";
+                
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri)).header("Content-Type", "application/json")
+                .POST(BodyPublishers.ofByteArray(payload)).timeout(Duration.ofMinutes(2)).build();
         client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
                 .thenAccept(result -> this.uplink(appId, udo, result.getBytes()));
     }

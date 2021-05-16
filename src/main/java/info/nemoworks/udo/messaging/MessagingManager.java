@@ -38,6 +38,14 @@ public class MessagingManager {
         subscriber.subscribe(getMqttTopic(appId, udo).getValue1());
     }
 
+    public void publish(String appId, Udo udo, byte[] payload) {
+        try {
+            this.publisher.publish(getMqttTopic(appId, udo).getValue0(), payload);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Subscribe
     public void udoEvent(UdoEvent event) {
         try {

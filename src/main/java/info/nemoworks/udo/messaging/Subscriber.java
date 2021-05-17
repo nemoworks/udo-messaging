@@ -20,6 +20,7 @@ public class Subscriber {
     public void subscribe(String mqttTopic, IMqttMessageListener listener) throws MqttException {
         if (!client.isConnected()) {
             client.connect();
+            log.debug("client" + client.getClientId() + "connected");
         }
 
         client.subscribe(mqttTopic, listener);

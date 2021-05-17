@@ -28,7 +28,7 @@ public class MessagingManager {
     private static final String PREFIX_UDO = "udo";
 
     public MessagingManager() {
-        eventBus.register(this);
+        // eventBus.register(this);
     }
 
     // <pub_topic, sub_topic>
@@ -42,22 +42,24 @@ public class MessagingManager {
 
         subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
 
-            for (UdoGateway udoGateway : gateways) {
+            // for (UdoGateway udoGateway : gateways) {
 
-                if (udoGateway.forUdo(udo)) {
-                    udoGateway.downlink(appId, udo, payload.getPayload());
-                }
+            // if (udoGateway.forUdo(udo)) {
+            // udoGateway.downlink(appId, udo, payload.getPayload());
+            // }
 
-            }
+            // }
         });
     }
 
-    public synchronized void handleUplink(String appId, Udo udo, byte[] payload) {
-        try {
-            this.publisher.publish(getMqttTopic(appId, udo).getValue0(), payload);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
+    public synchronized void handleUplink(String tag, byte[] payload) {
+        
+        // try {
+            System.out.println(tag + ":" + new String(payload));
+            // this.publisher.publish(getMqttTopic(appId, udo).getValue0(), payload);
+        // } catch (MqttException e) {
+        //     e.printStackTrace();
+        // }
     }
 
     @Subscribe

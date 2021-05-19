@@ -14,21 +14,21 @@ import info.nemoworks.udo.model.UdoEvent;
 
 public class MessagingManager {
 
-    @Autowired
-    private Publisher publisher;
-
-    @Autowired
-    private Subscriber subscriber;
-
-    @Autowired
-    private EventBus eventBus;
-
-    private Set<UdoGateway> gateways;
+//    @Autowired
+//    private Publisher publisher;
+//
+//    @Autowired
+//    private Subscriber subscriber;
+//
+//    @Autowired
+//    private EventBus eventBus;
+//
+//    private Set<UdoGateway> gateways;
 
     private static final String PREFIX_UDO = "udo";
 
     public MessagingManager() {
-        // eventBus.register(this);
+   //      eventBus.register(this);
     }
 
     // <pub_topic, sub_topic>
@@ -40,16 +40,17 @@ public class MessagingManager {
 
         udo.getContextInfo().addContext(appId, getMqttTopic(appId, udo));
 
-        subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
 
-            // for (UdoGateway udoGateway : gateways) {
+   //     subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
 
-            // if (udoGateway.forUdo(udo)) {
-            // udoGateway.downlink(appId, udo, payload.getPayload());
-            // }
-
-            // }
-        });
+//             for (UdoGateway udoGateway : gateways) {
+//
+//             if (udoGateway.forUdo(udo)) {
+//             udoGateway.downlink(appId, udo, payload.getPayload());
+//             }
+//
+//             }
+   //     });
     }
 
     public synchronized void handleUplink(String tag, byte[] payload) {
@@ -62,15 +63,15 @@ public class MessagingManager {
         // }
     }
 
-    @Subscribe
-    public synchronized void handleUdoEvent(UdoEvent event) {
-        try {
-            this.publisher.publish(event.getSource().getContextInfo().getContext(event.getContextId()).toString(),
-                    event.getPayload());
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-
-    }
+//    @Subscribe
+//    public synchronized void handleUdoEvent(UdoEvent event) {
+//        try {
+//            this.publisher.publish(event.getSource().getContextInfo().getContext(event.getContextId()).toString(),
+//                    event.getPayload());
+//        } catch (MqttException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
 }

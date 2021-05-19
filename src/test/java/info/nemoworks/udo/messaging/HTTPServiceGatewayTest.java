@@ -27,14 +27,14 @@ public class HTTPServiceGatewayTest {
         Udo udo1 = new Udo(null, null);
         ;
         udo1.setId("springboot-1");
-        udo1.getMetaInfo().uri = "http://localhost:8080/actuator/metrics/process.cpu.usage";
+        udo1.uri = "http://localhost:8081/actuator/metrics/process.cpu.usage";
 
         Udo udo2 = new Udo(null, null);
-        udo2.setId("springboot-2");
-        udo2.getMetaInfo().uri = "http://localhost:8080/";
+        udo2.setId("r9s_g3kB2maipzb7EIRb");
+        udo2.uri = "http://localhost:8081/";
 
-        httpServiceGateway.register(udo1.getId(), URI.create(udo1.getMetaInfo().uri));
-        httpServiceGateway.register(udo2.getId(), URI.create(udo2.getMetaInfo().uri));
+       // httpServiceGateway.register(udo1.getId(), URI.create(udo1.uri));
+        httpServiceGateway.register(udo2.getId(), URI.create(udo2.uri));
 
         httpServiceGateway.start();
 

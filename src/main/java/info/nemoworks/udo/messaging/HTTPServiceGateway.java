@@ -1,15 +1,12 @@
 package info.nemoworks.udo.messaging;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.UdoType;
-import info.nemoworks.udo.service.UdoServiceException;
+import info.nemoworks.udo.model.UdoEvent;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
@@ -17,9 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -37,14 +32,25 @@ public class HTTPServiceGateway extends UdoGateway {
 
         private final Map<String, URI> endpoints;
 
-        public HTTPServiceGateway(MessagingManager messagingManager) {
-                super(messagingManager);
-
+        public HTTPServiceGateway() {
+                super();
                 endpoints = new HashMap<>();
 
                 client = HttpClient.newBuilder().version(Version.HTTP_1_1).followRedirects(Redirect.NORMAL)
                                 .connectTimeout(Duration.ofSeconds(20)).build();
         }
+
+        @Subscribe
+        public void udoEvent(UdoEvent udoEvent){
+                try {
+                        Udo udo = (Udo) udoEvent.getSource();
+                        this.register(udo.getId(),new URI(udo.uri));
+                } catch (URISyntaxException e) {
+                        e.printStackTrace();
+                }
+                System.out.println(udoEvent.toString());
+        }
+
 
         public void register(String tag, URI uri) {
                 endpoints.put(tag, uri);
@@ -90,9 +96,11 @@ public class HTTPServiceGateway extends UdoGateway {
                 HttpRequest request = HttpRequest.newBuilder().uri(URI.create(new String(payload)))
                                 .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
                                 .build();
-                List<UdoType> types = udoService.getAllTypes();
-                client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
-                                .thenAccept(body -> this.updateUdo(tag, body.getBytes()));
+                HttpResponse<String> body = client.send(request,BodyHandlers.ofString());
+                System.out.println(body.body());
+                this.updateUdo(tag,body.body().getBytes());
+//                client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
+//                                .thenAccept(body -> this.updateUdo(tag, body.getBytes()));
         }
 
 

@@ -1,44 +1,59 @@
 package info.nemoworks.udo.messaging;
 
+import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.SyncEvent;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.service.UdoService;
-import info.nemoworks.udo.service.UdoServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public abstract class UdoGateway {
 
-    protected MessagingManager messagingManager;
-
+//    protected MessagingManager messagingManager;
     @Autowired
-    UdoService udoService;
+    EventBus eventBus;
 
-    protected UdoGateway(MessagingManager messagingManager) {
-        this.messagingManager = messagingManager;
+    public enum UdoGatewayType {
+        HTTP,MQTT
+    }
+
+    public UdoGatewayType getType() {
+        return type;
+    }
+
+    public void setType(UdoGatewayType type) {
+        this.type = type;
+    }
+
+    private UdoGatewayType type;
+
+    protected UdoGateway() {
     }
 
     // calling the service/device
     public abstract void downlink(String tag, byte[] payload) throws IOException, InterruptedException;
 
     // messaging back to manager
-    protected void uplink(String tag, byte[] payload) {
-        this.messagingManager.handleUplink(tag, payload);
-    }
+//    protected void uplink(String tag, byte[] payload) {
+//        this.messagingManager.handleUplink(tag, payload);
+//    }
 
     //upadte udo
     protected void updateUdo(String tag,byte[] payload){
-        JsonObject data = new Gson().fromJson(Arrays.toString(payload),JsonObject.class);
-        Udo udo = udoService.getUdoById(tag);
-        udo.setData(data);
-        try {
-            udoService.saveOrUpdateUdo(udo);
-        } catch (UdoServiceException e) {
-            e.printStackTrace();
-        }
+        String s = "{'Name':'Jeep'}";
+        JsonObject data = new Gson().fromJson(new String(payload),JsonObject.class);
+        Udo udo = new Udo(null,data);
+        udo.setId(tag);
+        eventBus.post(new SyncEvent("sync",udo));
+//        Udo udo = udoService.getUdoById(tag);
+//        udo.setData(data);
+//        try {
+//            udoService.saveOrUpdateUdo(udo);
+//        } catch (UdoServiceException e) {
+//            e.printStackTrace();
+//        }
     }
 
 }

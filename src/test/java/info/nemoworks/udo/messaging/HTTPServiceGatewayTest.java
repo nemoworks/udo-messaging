@@ -6,19 +6,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import info.nemoworks.udo.model.Udo;
-import lombok.extern.slf4j.Slf4j;
 
 public class HTTPServiceGatewayTest {
 
     private HTTPServiceGateway httpServiceGateway;
-    private MessagingManager messagingManager;
+  //  private MessagingManager messagingManager;
 
     @BeforeEach
     public void setup() {
 
-        messagingManager = new MessagingManager();
+       // messagingManager = new MessagingManager();
 
-        httpServiceGateway = new HTTPServiceGateway(messagingManager);
+        httpServiceGateway = new HTTPServiceGateway();
     }
 
     @Test

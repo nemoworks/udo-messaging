@@ -4,13 +4,12 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import info.nemoworks.udo.model.EventType;
+import info.nemoworks.udo.model.SyncEvent;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.UdoEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 
-//import info.nemoworks.udo.model.SyncEvent;
 
 public abstract class UdoGateway {
 
@@ -45,11 +44,11 @@ public abstract class UdoGateway {
 
     //upadte udo
     protected void updateUdo(String tag, byte[] payload) {
-        String s = "{'Name':'Jeep'}";
+        //String s = "{'Name':'Jeep'}";
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
         Udo udo = new Udo(null, data);
         udo.setId(tag);
-        eventBus.post(new UdoEvent(EventType.SYNC, udo, payload));
+        eventBus.post(new SyncEvent(EventType.SYNC, udo));
 //        Udo udo = udoService.getUdoById(tag);
 //        udo.setData(data);
 //        try {

@@ -2,19 +2,27 @@ package info.nemoworks.udo.messaging;
 
 import java.util.UUID;
 
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
+import info.nemoworks.udo.messaging.gateway.UdoGateway;
+import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
+import org.checkerframework.checker.units.qual.A;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PubSubTest {
 
     MqttClient client1, client2;
+
+    UdoGateway udoGateway;
+    ApplicationContext applicationContext;
 
     @BeforeEach
     public void setup() throws MqttException {
@@ -32,6 +40,9 @@ public class PubSubTest {
         client1.connect(options);
         client2.connect(options);
 
+        udoGateway = new HTTPServiceGateway();
+
+
     }
 
     @Test
@@ -47,7 +58,7 @@ public class PubSubTest {
         subscriber.subscribe("udo1",(topic, payload) -> {
             System.out.println("subscriber====="+new String(payload.getPayload()));
         });
-         Publisher publisher = new Publisher(client2);
+        Publisher publisher = new Publisher(client2);
 
          udo.setId(UUID.randomUUID().toString());
 
@@ -65,4 +76,17 @@ public class PubSubTest {
 
     }
 
+
+    @Test
+    public void test_ApplicationContext_Pub_Sub() throws MqttException {
+        Publisher publisher = new Publisher(client2);
+        Subscriber subscriber = new Subscriber(client1);
+        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway);
+        Udo udo = new Udo(null, null);
+        udo.setId(UUID.randomUUID().toString());
+        String topic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo).getValue1();
+        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
+
+        publisher.publish(topic,"asasasaxcasdcswd".getBytes());
+    }
 }

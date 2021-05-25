@@ -1,5 +1,6 @@
 package info.nemoworks.udo.messaging.messaging;
 
+import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
@@ -10,24 +11,34 @@ import java.util.UUID;
 @Component
 public class ApplicationContext {
 
-    private final String mmid;
+    private final String appId;
 
     private final Publisher publisher;
 
     private final Subscriber subscriber;
 
-    private static final String PREFIX_UDO = "udo";
-    private static final String PREFIX_MsgManager = "MM_";
+    private UdoGateway udoGateway;
 
-    public ApplicationContext(Publisher publisher, Subscriber subscriber) {
+    private static final String PREFIX_SUB = "sub";
+    private static final String PREFIX_PUB = "sub";
+    private static final String PREFIX_MsgManager = "app_";
+
+    public ApplicationContext(Publisher publisher, Subscriber subscriber,UdoGateway udoGateway) {
         this.publisher = publisher;
         this.subscriber = subscriber;
-        this.mmid = PREFIX_MsgManager+ UUID.randomUUID().toString();
+        this.udoGateway = udoGateway;
+        this.appId = PREFIX_MsgManager+ UUID.randomUUID().toString();
+        ApplicationContextCluster.createApplicationContext(appId);
     }
 
     // <pub_topic, sub_topic>
-    private Pair<String, String> getMqttTopic(String appId, Udo udo) {
-        return new Pair<>(PREFIX_UDO + "/" + "app" + appId + "/" + udo.getId(), PREFIX_UDO + "/" + "app" + appId);
+    public Pair<String, String> getMqttTopic(String appId, Udo udo) {
+        return new Pair<>(PREFIX_PUB + "/" + "app" + appId + "/" + udo.getId()
+                , PREFIX_SUB + "/" + "app" + appId + "/" + udo.getId());
+    }
+
+    private String getUdoId(String topic){
+        return topic.split("/")[2];
     }
 
     public synchronized void publishMessage(String topic, byte[] payload) {
@@ -44,12 +55,14 @@ public class ApplicationContext {
             ApplicationContextCluster.addUdoId(appId,udo.getId());
         }
         subscriber.subscribe(getMqttTopic(appId,udo).getValue1(),(topic, payload) -> {
+            String udoId = getUdoId(topic);
+            udoGateway.updateUdo(udoId,payload.getPayload());
             System.out.println("subscriber====="+new String(payload.getPayload()));
         });
-
     }
 
-    public String getMmid() {
-        return mmid;
+    public String getAppId() {
+        return appId;
     }
+
 }

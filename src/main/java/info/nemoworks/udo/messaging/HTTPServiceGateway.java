@@ -61,8 +61,18 @@ public class HTTPServiceGateway extends UdoGateway {
                     break;
                 case DELETE:
                     this.unregister(udo.getId(), new URI(udo.uri));
+                    break;
+                case SAVE_BY_URI:
+                    HttpRequest uriRequest = HttpRequest.newBuilder().uri(URI.create(new String(udoEvent.getPayload())))
+                            .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
+                            .build();
+                    HttpResponse<String> uriBody = client.send(uriRequest, BodyHandlers.ofString());
+                    System.out.println("Subscribing: " + uriBody.body());
+                    this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(), udoEvent.getPayload());
+                    break;
                 default:
-                    this.register(udo.getId(), new URI(udo.uri));
+//                    this.register(udo.getId(), new URI(udo.uri));
+                    break;
             }
         } catch (URISyntaxException | InterruptedException | IOException e) {
             e.printStackTrace();
@@ -72,11 +82,13 @@ public class HTTPServiceGateway extends UdoGateway {
 
 
     public void register(String tag, URI uri) {
-        endpoints.put(tag, uri);
+        if (endpoints.containsKey(tag))
+            endpoints.put(tag, uri);
     }
 
     public void unregister(String tag, URI uri) {
-        endpoints.remove(tag, uri);
+        if (endpoints.containsKey(tag))
+            endpoints.remove(tag, uri);
     }
 
     public void start() throws InterruptedException {
@@ -120,7 +132,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
                 .build();
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
-        System.out.println(body.body());
+//        System.out.println(body.body());
         this.updateUdo(tag, body.body().getBytes());
 //                client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
 //                                .thenAccept(body -> this.updateUdo(tag, body.getBytes()));

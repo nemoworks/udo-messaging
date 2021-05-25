@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import info.nemoworks.udo.model.EventType;
+import info.nemoworks.udo.model.SaveByUriEvent;
 import info.nemoworks.udo.model.SyncEvent;
 import info.nemoworks.udo.model.Udo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,13 +50,14 @@ public abstract class UdoGateway {
         Udo udo = new Udo(null, data);
         udo.setId(tag);
         eventBus.post(new SyncEvent(EventType.SYNC, udo));
-//        Udo udo = udoService.getUdoById(tag);
-//        udo.setData(data);
-//        try {
-//            udoService.saveOrUpdateUdo(udo);
-//        } catch (UdoServiceException e) {
-//            e.printStackTrace();
-//        }
+    }
+
+    protected void updateUdoByUri(String tag, byte[] payload, byte[] uri) {
+        JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
+        Udo udo = new Udo(null, data);
+        udo.setId(tag);
+        udo.setUri(new String(uri));
+        eventBus.post(new SaveByUriEvent(EventType.SAVE_BY_URI, udo, uri));
     }
 
 }

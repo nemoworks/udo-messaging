@@ -2,6 +2,7 @@ package info.nemoworks.udo.messaging;
 
 import java.net.URI;
 
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package info.nemoworks.udo.messaging;
+package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.EventType;
@@ -18,25 +18,22 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Component
 public class HTTPServiceGateway extends UdoGateway {
 
     private final HttpClient client;
 
-    public Map<String, URI> getEndpoints() {
+    public ConcurrentHashMap<String, URI> getEndpoints() {
         return endpoints;
     }
 
-    private final Map<String, URI> endpoints;
+    private volatile static ConcurrentHashMap<String, URI> endpoints;
 
     public HTTPServiceGateway() {
         super();
-        endpoints = new HashMap<>();
+        endpoints = new ConcurrentHashMap<>();
 
         client = HttpClient.newBuilder().version(Version.HTTP_1_1).followRedirects(Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(20)).build();

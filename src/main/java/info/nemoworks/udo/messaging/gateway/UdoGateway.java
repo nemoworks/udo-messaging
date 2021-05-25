@@ -1,4 +1,4 @@
-package info.nemoworks.udo.messaging;
+package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
@@ -13,7 +13,6 @@ import java.io.IOException;
 
 public abstract class UdoGateway {
 
-    //    protected MessagingManager messagingManager;
     @Autowired
     EventBus eventBus;
 
@@ -37,25 +36,12 @@ public abstract class UdoGateway {
     // calling the service/device
     public abstract void downlink(String tag, byte[] payload) throws IOException, InterruptedException;
 
-    // messaging back to manager
-//    protected void uplink(String tag, byte[] payload) {
-//        this.messagingManager.handleUplink(tag, payload);
-//    }
-
     //upadte udo
     protected void updateUdo(String tag, byte[] payload) {
-        //String s = "{'Name':'Jeep'}";
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
         Udo udo = new Udo(null, data);
         udo.setId(tag);
         eventBus.post(new SyncEvent(EventType.SYNC, udo));
-//        Udo udo = udoService.getUdoById(tag);
-//        udo.setData(data);
-//        try {
-//            udoService.saveOrUpdateUdo(udo);
-//        } catch (UdoServiceException e) {
-//            e.printStackTrace();
-//        }
     }
 
 }

@@ -2,6 +2,9 @@ package info.nemoworks.udo.messaging;
 
 import java.util.UUID;
 
+import info.nemoworks.udo.messaging.messaging.Publisher;
+import info.nemoworks.udo.messaging.messaging.Subscriber;
+import info.nemoworks.udo.model.Udo;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -11,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 public class PubSubTest {
 
-    IMqttClient client1, client2;
+    MqttClient client1, client2;
 
     @BeforeEach
     public void setup() throws MqttException {
@@ -34,23 +37,30 @@ public class PubSubTest {
     @Test
     public void whensubandpub_thenSuccess() throws MqttException, InterruptedException {
 
-        // CountDownLatch receivedSignal = new CountDownLatch(1);
+         Subscriber subscriber = new Subscriber(client1);
+         Udo udo = new Udo(null, null);
 
-        // Subscriber subscriber = new Subscriber(client1);
-        // Udo udo = new Udo(null, null);
+         subscriber.subscribe("udo",(topic, payload) -> {
+             System.out.println("subscriber====="+new String(payload.getPayload()));
+         });
 
-        // subscriber.subscribe(udo.);
+        subscriber.subscribe("udo1",(topic, payload) -> {
+            System.out.println("subscriber====="+new String(payload.getPayload()));
+        });
+         Publisher publisher = new Publisher(client2);
 
-        // Publisher publisher = new Publisher(client2);
+         udo.setId(UUID.randomUUID().toString());
 
-        // udo.setId(UUID.randomUUID().toString());
+         int i = 0;
+         while(i<10){
+             publisher.publish("udo", "hello udo".getBytes());
+             publisher.publish("udo1", "hello udo11".getBytes());
+             Thread.sleep(1000);
+             i++;
+         }
 
-        // publisher.publish(udo, "hello udo");
-
-        // receivedSignal.await(10, TimeUnit.SECONDS);
-
-        // client1.close();
-        // client2.close();
+         client1.close();
+         client2.close();
 
 
     }

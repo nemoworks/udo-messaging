@@ -1,6 +1,7 @@
 package info.nemoworks.udo.messaging;
 
 import com.google.common.eventbus.EventBus;
+import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;

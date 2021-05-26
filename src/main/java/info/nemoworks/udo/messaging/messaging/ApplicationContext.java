@@ -4,18 +4,14 @@ import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.util.UUID;
 
-@Component
+
 public class ApplicationContext {
 
    // private static final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
-    private final String appId;
+    private String appId;
 
     private final Publisher publisher;
 
@@ -27,12 +23,23 @@ public class ApplicationContext {
     private static final String PREFIX_PUB = "sub";
     private static final String PREFIX_MsgManager = "app_";
 
-    public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway,String id) {
+    public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway) {
         this.publisher = publisher;
         this.subscriber = subscriber;
         this.udoGateway = udoGateway;
-        this.appId = PREFIX_MsgManager + id;
-        ApplicationContextCluster.createApplicationContext(appId);
+    }
+
+    public ApplicationContext( Publisher publisher, Subscriber subscriber, UdoGateway udoGateway,String appId) {
+        this.appId = PREFIX_MsgManager+appId;
+        this.publisher = publisher;
+        this.subscriber = subscriber;
+        this.udoGateway = udoGateway;
+        ApplicationContextCluster.createApplicationContext(this);
+    }
+
+    public void setAppId(String appId) {
+        this.appId = PREFIX_MsgManager+appId;
+        ApplicationContextCluster.createApplicationContext(this);
     }
 
     // <pub_topic, sub_topic>
@@ -61,7 +68,7 @@ public class ApplicationContext {
         }
         subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
             String udoId = getUdoId(topic);
-            udoGateway.updateUdo(udoId, payload.getPayload());
+            udoGateway.updateUdoByMqtt(udoId, payload.getPayload());
             System.out.println("subscriber=====" + new String(payload.getPayload()));
         });
     }

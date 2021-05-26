@@ -17,7 +17,7 @@
 //import org.springframework.context.annotation.Bean;
 //
 //import info.nemoworks.udo.model.Udo;
-//import info.nemoworks.udo.model.UdoEvent;
+//import info.nemoworks.udo.model.event.UdoEvent;
 //import org.springframework.context.annotation.ComponentScan;
 //
 //@SpringBootApplication

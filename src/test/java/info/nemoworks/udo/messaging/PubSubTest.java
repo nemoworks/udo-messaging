@@ -82,7 +82,7 @@ public class PubSubTest {
     public void test_ApplicationContext_Pub_Sub() throws MqttException {
         Publisher publisher = new Publisher(client2);
         Subscriber subscriber = new Subscriber(client1);
-        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway,"demo");
+        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway);
         Udo udo = new Udo(null, null);
         udo.setId(UUID.randomUUID().toString());
         Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);

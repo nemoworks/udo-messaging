@@ -1,9 +1,10 @@
 package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.Subscribe;
-import info.nemoworks.udo.model.EventType;
+import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.UdoEvent;
+import info.nemoworks.udo.model.event.GatewayEvent;
+import info.nemoworks.udo.model.event.UdoEvent;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,8 +17,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.*;
 
 @Component
@@ -40,7 +39,7 @@ public class HTTPServiceGateway extends UdoGateway {
     }
 
     @Subscribe
-    public void udoEvent(UdoEvent udoEvent) {
+    public void udoEvent(GatewayEvent udoEvent) {
         try {
             Udo udo = (Udo) udoEvent.getSource();
             EventType contextId = udoEvent.getContextId();
@@ -54,7 +53,7 @@ public class HTTPServiceGateway extends UdoGateway {
                             .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
                             .build();
                     HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
-                    this.updateUdo(udo.getId(), body.body().getBytes());
+                    this.updateUdoByPolling(udo.getId(), body.body().getBytes());
                     break;
                 case DELETE:
                     this.unregister(udo.getId(), new URI(udo.uri));
@@ -78,12 +77,12 @@ public class HTTPServiceGateway extends UdoGateway {
     }
 
 
-    public void register(String tag, URI uri) {
+    public synchronized void register(String tag, URI uri) {
         if (endpoints.containsKey(tag))
             endpoints.put(tag, uri);
     }
 
-    public void unregister(String tag, URI uri) {
+    public synchronized void unregister(String tag, URI uri) {
         if (endpoints.containsKey(tag))
             endpoints.remove(tag, uri);
     }
@@ -129,7 +128,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
                 .build();
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
-        this.updateUdo(tag, body.body().getBytes());
+        this.updateUdoByPolling(tag, body.body().getBytes());
 //                client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
 //                                .thenAccept(body -> this.updateUdo(tag, body.getBytes()));
     }

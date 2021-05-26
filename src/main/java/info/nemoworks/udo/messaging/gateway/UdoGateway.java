@@ -3,13 +3,15 @@ package info.nemoworks.udo.messaging.gateway;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import info.nemoworks.udo.model.EventType;
-import info.nemoworks.udo.model.SaveByUriEvent;
-import info.nemoworks.udo.model.SyncEvent;
+import info.nemoworks.udo.model.event.EventType;
+import info.nemoworks.udo.model.event.SaveByMqttEvent;
+import info.nemoworks.udo.model.event.SaveByUriEvent;
+import info.nemoworks.udo.model.event.SyncEvent;
 import info.nemoworks.udo.model.Udo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.net.URI;
 
 
 public abstract class UdoGateway {
@@ -37,21 +39,30 @@ public abstract class UdoGateway {
     // calling the service/device
     public abstract void downlink(String tag, byte[] payload) throws IOException, InterruptedException;
 
-    //upadte udo
-    public void updateUdo(String tag, byte[] payload) {
-        System.out.println("update Udo "+payload.toString());
-        JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
-        Udo udo = new Udo(null, data);
-        udo.setId(tag);
-        eventBus.post(new SyncEvent(EventType.SYNC, udo));
+    //upadte udo by polling
+    public void updateUdoByPolling(String tag, byte[] payload) {
+        System.out.println("update Udo " + payload.toString());
+        Udo udo = this.updateUdo(tag, payload);
+        eventBus.post(new SyncEvent(EventType.SYNC, udo, null));
     }
 
+    //update udo by uri
     protected void updateUdoByUri(String tag, byte[] payload, byte[] uri) {
+        Udo udo = this.updateUdo(tag, payload);
+        udo.setUri(new String(uri));
+        eventBus.post(new SaveByUriEvent(udo, null, EventType.SAVE_BY_URI, URI.create(new String(uri))));
+    }
+
+    public void updateUdoByMqtt(String tag, byte[] payload) {
+        Udo udo = this.updateUdo(tag, payload);
+        eventBus.post(new SaveByMqttEvent(EventType.SAVE_BY_MQTT, udo, null));
+    }
+
+    public Udo updateUdo(String id, byte[] payload) {
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
         Udo udo = new Udo(null, data);
-        udo.setId(tag);
-        udo.setUri(new String(uri));
-        eventBus.post(new SaveByUriEvent(EventType.SAVE_BY_URI, udo, uri));
+        udo.setId(id);
+        return udo;
     }
 
 }

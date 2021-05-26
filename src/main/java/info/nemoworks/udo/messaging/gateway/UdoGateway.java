@@ -39,6 +39,7 @@ public abstract class UdoGateway {
 
     //upadte udo
     public void updateUdo(String tag, byte[] payload) {
+        System.out.println("update Udo "+payload.toString());
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
         Udo udo = new Udo(null, data);
         udo.setId(tag);

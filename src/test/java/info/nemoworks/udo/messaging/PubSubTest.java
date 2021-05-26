@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,12 +82,12 @@ public class PubSubTest {
     public void test_ApplicationContext_Pub_Sub() throws MqttException {
         Publisher publisher = new Publisher(client2);
         Subscriber subscriber = new Subscriber(client1);
-        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway);
+        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway,"demo");
         Udo udo = new Udo(null, null);
         udo.setId(UUID.randomUUID().toString());
-        String topic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo).getValue1();
+        Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);
         applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
 
-        publisher.publish(topic,"asasasaxcasdcswd".getBytes());
+        applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
     }
 }

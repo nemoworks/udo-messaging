@@ -1,9 +1,8 @@
 package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.Subscribe;
-import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.event.GatewayEvent;
+import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.UdoEvent;
 import org.springframework.stereotype.Component;
 
@@ -38,42 +37,57 @@ public class HTTPServiceGateway extends UdoGateway {
                 .connectTimeout(Duration.ofSeconds(20)).build();
     }
 
+    HttpResponse<String> getRequestBody(byte[] payload) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(new String(payload)))
+                .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
+                .build();
+        return client.send(request, BodyHandlers.ofString());
+    }
+
     @Subscribe
-    public void udoEvent(GatewayEvent udoEvent) {
+    public void storageEvent(UdoEvent storageEvent) {
         try {
-            Udo udo = (Udo) udoEvent.getSource();
-            EventType contextId = udoEvent.getContextId();
+            Udo udo = (Udo) storageEvent.getSource();
+            EventType contextId = storageEvent.getContextId();
+            switch (contextId) {
+                case SAVE_BY_URI:
+                    HttpResponse<String> uriBody = getRequestBody(storageEvent.getPayload());
+                    this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(), storageEvent.getPayload());
+                    break;
+                case SAVE:
+                    this.register(udo.getId(), new URI(udo.uri));
+                    break;
+                default:
+                    break;
+            }
+        } catch (InterruptedException | IOException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Subscribe
+    public void gateWayEvent(UdoEvent gatewayEvent) {
+        try {
+            Udo udo = (Udo) gatewayEvent.getSource();
+            EventType contextId = gatewayEvent.getContextId();
             switch (contextId) {
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri));
                     break;
                 case SYNC:
                 case UPDATE:
-                    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(new String(udoEvent.getPayload())))
-                            .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
-                            .build();
-                    HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
+                    HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByPolling(udo.getId(), body.body().getBytes());
                     break;
                 case DELETE:
                     this.unregister(udo.getId(), new URI(udo.uri));
                     break;
-                case SAVE_BY_URI:
-                    HttpRequest uriRequest = HttpRequest.newBuilder().uri(URI.create(new String(udoEvent.getPayload())))
-                            .header("Content-Type", "application/json").GET().timeout(Duration.ofMinutes(2))
-                            .build();
-                    HttpResponse<String> uriBody = client.send(uriRequest, BodyHandlers.ofString());
-                    System.out.println("Subscribing: " + uriBody.body());
-                    this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(), udoEvent.getPayload());
-                    break;
                 default:
-//                    this.register(udo.getId(), new URI(udo.uri));
                     break;
             }
         } catch (URISyntaxException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
-        System.out.println(udoEvent.toString());
     }
 
 
@@ -129,8 +143,6 @@ public class HTTPServiceGateway extends UdoGateway {
                 .build();
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
         this.updateUdoByPolling(tag, body.body().getBytes());
-//                client.sendAsync(request, BodyHandlers.ofString()).thenApply(HttpResponse::body)
-//                                .thenAccept(body -> this.updateUdo(tag, body.getBytes()));
     }
 
 

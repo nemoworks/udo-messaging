@@ -3,15 +3,14 @@ package info.nemoworks.udo.messaging.gateway;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.SaveByMqttEvent;
 import info.nemoworks.udo.model.event.SaveByUriEvent;
 import info.nemoworks.udo.model.event.SyncEvent;
-import info.nemoworks.udo.model.Udo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.net.URI;
 
 
 public abstract class UdoGateway {
@@ -50,7 +49,7 @@ public abstract class UdoGateway {
     protected void updateUdoByUri(String tag, byte[] payload, byte[] uri) {
         Udo udo = this.updateUdo(tag, payload);
         udo.setUri(new String(uri));
-        eventBus.post(new SaveByUriEvent(udo, null, EventType.SAVE_BY_URI, URI.create(new String(uri))));
+        eventBus.post(new SaveByUriEvent(EventType.SAVE_BY_URI, udo, uri));
     }
 
     public void updateUdoByMqtt(String tag, byte[] payload) {

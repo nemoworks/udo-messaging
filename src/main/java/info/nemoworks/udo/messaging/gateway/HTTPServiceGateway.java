@@ -65,6 +65,7 @@ public class HTTPServiceGateway extends UdoGateway {
             EventType contextId = storageEvent.getContextId();
             switch (contextId) {
                 case SAVE_BY_URI:
+//                case UPDATE:
                     HttpResponse<String> uriBody = getRequestBody(storageEvent.getPayload());
                     this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
                         storageEvent.getPayload());

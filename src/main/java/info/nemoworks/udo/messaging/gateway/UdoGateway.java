@@ -8,15 +8,18 @@ import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.SaveByMqttEvent;
 import info.nemoworks.udo.model.event.SaveByUriEvent;
 import info.nemoworks.udo.model.event.SyncEvent;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-
-
+@Slf4j
 public abstract class UdoGateway {
 
     @Autowired
     EventBus eventBus;
+
+//    private static final Logger logger = LoggerFactory.getLogger(UdoGateway.class);
+
 
     public enum UdoGatewayType {
         HTTP, MQTT
@@ -36,11 +39,12 @@ public abstract class UdoGateway {
     }
 
     // calling the service/device
-    public abstract void downlink(String tag, byte[] payload) throws IOException, InterruptedException;
+    public abstract void downlink(String tag, byte[] payload)
+        throws IOException, InterruptedException;
 
     //upadte udo by polling
     public void updateUdoByPolling(String tag, byte[] payload) {
-        System.out.println("update Udo " + payload.toString());
+        log.info("update Udo " + new String(payload));
         Udo udo = this.updateUdo(tag, payload);
         eventBus.post(new SyncEvent(EventType.SYNC, udo, null));
     }

@@ -3,6 +3,7 @@ package info.nemoworks.udo.messaging.gateway;
 import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
+import info.nemoworks.udo.model.event.GatewayEvent;
 import info.nemoworks.udo.model.event.UdoEvent;
 import java.io.IOException;
 import java.net.URI;
@@ -40,7 +41,6 @@ public class HTTPServiceGateway extends UdoGateway {
     public HTTPServiceGateway() {
         super();
         endpoints = new ConcurrentHashMap<>();
-
         client =
             HttpClient.newBuilder()
                 .version(Version.HTTP_1_1)
@@ -58,39 +58,21 @@ public class HTTPServiceGateway extends UdoGateway {
         return client.send(request, BodyHandlers.ofString());
     }
 
-    @Subscribe
-    public void storageEvent(UdoEvent storageEvent) {
-        try {
-            Udo udo = (Udo) storageEvent.getSource();
-            EventType contextId = storageEvent.getContextId();
-            switch (contextId) {
-                case SAVE_BY_URI:
-//                case UPDATE:
-                    HttpResponse<String> uriBody = getRequestBody(storageEvent.getPayload());
-                    this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
-                        storageEvent.getPayload());
-                    break;
-                case SAVE:
-                    this.register(udo.getId(), new URI(udo.uri));
-                    break;
-                default:
-                    break;
-            }
-        } catch (InterruptedException | IOException | URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Subscribe
-    public void gateWayEvent(UdoEvent gatewayEvent) {
+    public void gateWayEvent(GatewayEvent gatewayEvent) {
         try {
             Udo udo = (Udo) gatewayEvent.getSource();
             EventType contextId = gatewayEvent.getContextId();
             switch (contextId) {
+                case SAVE_BY_URI:
+                    HttpResponse<String> uriBody = getRequestBody(gatewayEvent.getPayload());
+                    this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
+                            gatewayEvent.getPayload());
+                    break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri));
                     break;
-                case SYNC:
                 case UPDATE:
                     HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByPolling(udo.getId(), body.body().getBytes());

@@ -87,7 +87,6 @@ public class PubSubTest {
         udo.setId(UUID.randomUUID().toString());
         Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);
         applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
-
         applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
     }
 }

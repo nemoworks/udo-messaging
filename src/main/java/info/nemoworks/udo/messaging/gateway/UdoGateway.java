@@ -4,10 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.event.EventType;
-import info.nemoworks.udo.model.event.SaveByMqttEvent;
-import info.nemoworks.udo.model.event.SaveByUriEvent;
-import info.nemoworks.udo.model.event.SyncEvent;
+import info.nemoworks.udo.model.event.*;
+
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +55,11 @@ public abstract class UdoGateway {
     }
 
     public void updateUdoByMqtt(String tag, byte[] payload) {
-        Udo udo = this.updateUdo(tag, payload);
-        eventBus.post(new SaveByMqttEvent(EventType.SAVE_BY_MQTT, udo, null));
+        System.out.println("update");
+        Udo udo = new Udo();
+        udo.setId("dsfwerf");
+        //Udo udo = this.updateUdo(tag, payload);
+        eventBus.post(new GatewayEvent(EventType.SAVE_BY_MQTT, udo, null));
     }
 
     public Udo updateUdo(String id, byte[] payload) {

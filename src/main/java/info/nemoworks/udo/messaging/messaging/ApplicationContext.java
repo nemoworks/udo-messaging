@@ -1,15 +1,13 @@
 package info.nemoworks.udo.messaging.messaging;
 
+import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.event.GatewayEvent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 
-
-
 public class ApplicationContext {
-
-   // private static final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
     private String appId;
 
@@ -52,6 +50,15 @@ public class ApplicationContext {
         return topic.split("/")[2];
     }
 
+
+
+    @Subscribe
+    public void ackMessage(GatewayEvent gatewayEvent){
+        System.out.println("asdads");
+        Udo udo = (Udo) gatewayEvent.getSource();
+        String topic = getMqttTopic(appId, udo).getValue0();
+        this.publishMessage(topic,udo.toString().getBytes());
+    }
 
     public synchronized void publishMessage(String topic, byte[] payload) {
         try {

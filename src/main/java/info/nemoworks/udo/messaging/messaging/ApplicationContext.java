@@ -3,10 +3,14 @@ package info.nemoworks.udo.messaging.messaging;
 import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
+import info.nemoworks.udo.model.event.PublishByMqttEvent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ApplicationContext {
 
     private String appId;
@@ -27,14 +31,6 @@ public class ApplicationContext {
         this.udoGateway = udoGateway;
     }
 
-    public ApplicationContext( Publisher publisher, Subscriber subscriber, UdoGateway udoGateway,String appId) {
-        this.appId = PREFIX_MsgManager+appId;
-        this.publisher = publisher;
-        this.subscriber = subscriber;
-        this.udoGateway = udoGateway;
-        ApplicationContextCluster.createApplicationContext(this);
-    }
-
     public void setAppId(String appId) {
         this.appId = PREFIX_MsgManager+appId;
         ApplicationContextCluster.createApplicationContext(this);
@@ -53,9 +49,8 @@ public class ApplicationContext {
 
 
     @Subscribe
-    public void ackMessage(GatewayEvent gatewayEvent){
-        System.out.println("asdads");
-        Udo udo = (Udo) gatewayEvent.getSource();
+    public void ackMessage(PublishByMqttEvent publishByMqttEvent){
+        Udo udo = (Udo) publishByMqttEvent.getSource();
         String topic = getMqttTopic(appId, udo).getValue0();
         this.publishMessage(topic,udo.toString().getBytes());
     }
@@ -75,7 +70,8 @@ public class ApplicationContext {
         }
         subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
             String udoId = getUdoId(topic);
-            udoGateway.updateUdoByMqtt(udoId, payload.getPayload());
+            payload.getPayload();
+           udoGateway.updateUdoByMqtt(udoId, payload.getPayload());
             System.out.println("subscriber=====" + new String(payload.getPayload()));
         });
     }

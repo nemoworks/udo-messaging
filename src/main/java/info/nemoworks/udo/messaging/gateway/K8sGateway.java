@@ -4,13 +4,13 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1NodeList;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.Config;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Component
 public class K8sGateway extends UdoGateway{
 
     public void getNodeList() throws IOException, ApiException {
@@ -20,6 +20,11 @@ public class K8sGateway extends UdoGateway{
         nodeList.getItems()
                 .stream()
                 .forEach((node) -> System.out.println(node));
+        V1PodList list = api.listNamespacedPod("calico-system", null, Boolean.FALSE, null
+                , null, null, 10, null, null
+                , null);
+        V1Pod pod = api.readNamespacedPod("calico-node-4p4vd", "calico-system", null, null, null);
+        System.out.println(pod.toString());
     }
 
     @Override

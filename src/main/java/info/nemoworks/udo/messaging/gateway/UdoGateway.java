@@ -55,11 +55,11 @@ public abstract class UdoGateway {
     }
 
     public void updateUdoByMqtt(String tag, byte[] payload) {
-        System.out.println("update");
-        Udo udo = new Udo();
-        udo.setId("dsfwerf");
-        //Udo udo = this.updateUdo(tag, payload);
-        eventBus.post(new GatewayEvent(EventType.SAVE_BY_MQTT, udo, null));
+//        System.out.println("update");
+//        Udo udo = new Udo();
+//        udo.setId("dsfwerf");
+        Udo udo = this.updateUdo(tag, payload);
+        eventBus.post(new SubscribeByMqttEvent(EventType.SUBSCRIBE_BY_MQTT, udo, null));
     }
 
     public Udo updateUdo(String id, byte[] payload) {

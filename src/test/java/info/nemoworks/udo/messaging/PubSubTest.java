@@ -2,21 +2,19 @@ package info.nemoworks.udo.messaging;
 
 import java.util.UUID;
 
+import com.google.common.eventbus.EventBus;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
-import org.checkerframework.checker.units.qual.A;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class PubSubTest {
 
@@ -24,6 +22,8 @@ public class PubSubTest {
 
     UdoGateway udoGateway;
     ApplicationContext applicationContext;
+
+    EventBus eventBus;
 
     @BeforeEach
     public void setup() throws MqttException {
@@ -40,8 +40,10 @@ public class PubSubTest {
         options.setConnectionTimeout(10);
         client1.connect(options);
         client2.connect(options);
+        eventBus = new EventBus();
 
         udoGateway = new HTTPServiceGateway();
+        eventBus.register(udoGateway);
 
 
     }
@@ -70,7 +72,6 @@ public class PubSubTest {
              Thread.sleep(1000);
              i++;
          }
-
          client1.close();
          client2.close();
 
@@ -82,7 +83,9 @@ public class PubSubTest {
     public void test_ApplicationContext_Pub_Sub() throws MqttException {
         Publisher publisher = new Publisher(client2);
         Subscriber subscriber = new Subscriber(client1);
-        applicationContext = new ApplicationContext(publisher,subscriber,udoGateway);
+        applicationContext = new ApplicationContext(publisher,subscriber, udoGateway);
+        applicationContext.setAppId("demo");
+        eventBus.register(applicationContext);
         Udo udo = new Udo(null, null);
         udo.setId(UUID.randomUUID().toString());
         Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);

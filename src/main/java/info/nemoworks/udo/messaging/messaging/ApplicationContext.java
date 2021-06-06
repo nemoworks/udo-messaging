@@ -1,29 +1,32 @@
 package info.nemoworks.udo.messaging.messaging;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
-import info.nemoworks.udo.model.event.PublishByMqttEvent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
 
 @Component
 public class ApplicationContext {
 
     private String appId;
 
-    private final Publisher publisher;
+    private Publisher publisher;
 
-    private final Subscriber subscriber;
+    private Subscriber subscriber;
 
     private final UdoGateway udoGateway;
 
     private static final String PREFIX_SUB = "sub";
-    private static final String PREFIX_PUB = "sub";
+    private static final String PREFIX_PUB = "pub";
     private static final String PREFIX_MsgManager = "app_";
+
 
     public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway) {
         this.publisher = publisher;
@@ -37,9 +40,9 @@ public class ApplicationContext {
     }
 
     // <pub_topic, sub_topic>
-    public Pair<String, String> getMqttTopic(String appId, Udo udo) {
-        return new Pair<>(PREFIX_PUB + "/" + appId + "/" + udo.getId()
-                , PREFIX_SUB + "/" + appId + "/" + udo.getId());
+    public static Pair<String, String> getMqttTopic(String appId, String udoId) {
+        return new Pair<>(PREFIX_PUB + "/" + appId + "/" + udoId
+                , PREFIX_SUB + "/" + appId+ "/" + udoId);
     }
 
     private String getUdoId(String topic) {
@@ -47,17 +50,23 @@ public class ApplicationContext {
     }
 
 
-
     @Subscribe
-    public void ackMessage(PublishByMqttEvent publishByMqttEvent){
-        Udo udo = (Udo) publishByMqttEvent.getSource();
-        String topic = getMqttTopic(appId, udo).getValue0();
-        this.publishMessage(topic,udo.toString().getBytes());
+    public void ackMessage(GatewayEvent gatewayEvent){
+        Udo udo = (Udo) gatewayEvent.getSource();
+        ApplicationContextCluster.getApplicationContextMap().get("app_demo").getValue1().forEach(udoId->{
+            if(!udo.getId().equals(udoId)){
+                String topic = getMqttTopic("app_demo", udoId).getValue1();
+                Thread thread = Thread.currentThread();
+                System.out.println("thread====="+thread.getId());
+                this.publishMessage(topic,udo.getData().toString().getBytes());
+            }
+        });
+
     }
 
-    public synchronized void publishMessage(String topic, byte[] payload) {
+    public void publishMessage(String topic, byte[] payload) {
         try {
-            System.out.println((topic + ":" + new String(payload)));
+            System.out.println(("publish========" + ":" + new String(payload)));
             this.publisher.publish(topic, payload);
         } catch (MqttException e) {
             e.printStackTrace();
@@ -68,11 +77,15 @@ public class ApplicationContext {
         if (!ApplicationContextCluster.getApplicationContextMap().get(appId).contains(udo.getId())) {
             ApplicationContextCluster.addUdoId(appId, udo.getId());
         }
-        subscriber.subscribe(getMqttTopic(appId, udo).getValue1(), (topic, payload) -> {
+        subscriber.subscribe(getMqttTopic(appId, udo.getId()).getValue1(), (topic, payload) -> {
             String udoId = getUdoId(topic);
             payload.getPayload();
-           udoGateway.updateUdoByMqtt(udoId, payload.getPayload());
+            Thread thread = Thread.currentThread();
+            System.out.println("thread====="+thread.getId());
             System.out.println("subscriber=====" + new String(payload.getPayload()));
+            JsonObject data = new Gson().fromJson(new String(payload.getPayload()), JsonObject.class);
+            HashMap<Object, Object> hashMap = new Gson().fromJson(data.toString(), HashMap.class);
+            udoGateway.updateLink(udoId, udo.getUri().getBytes(),hashMap);
         });
     }
 

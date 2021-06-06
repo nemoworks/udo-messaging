@@ -4,10 +4,10 @@ import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
-import info.nemoworks.udo.model.event.UdoEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
@@ -15,11 +15,15 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import info.nemoworks.udo.model.event.SyncEvent;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,14 +33,14 @@ public class HTTPServiceGateway extends UdoGateway {
     private final Builder httpRequestBuilder =
         HttpRequest.newBuilder()
             .header("Content-Type", "application/json")
-            .GET()
             .timeout(Duration.ofMinutes(2));
+
 
     public ConcurrentHashMap<String, URI> getEndpoints() {
         return endpoints;
     }
 
-    private static volatile ConcurrentHashMap<String, URI> endpoints;
+    private final ConcurrentHashMap<String, URI> endpoints;
 
     public HTTPServiceGateway() {
         super();
@@ -52,6 +56,7 @@ public class HTTPServiceGateway extends UdoGateway {
     HttpResponse<String> getRequestBody(byte[] payload) throws IOException, InterruptedException {
         HttpRequest request =
             httpRequestBuilder
+                    .GET()
                 .uri(URI.create(new String(payload)))
                 .build();
 
@@ -89,7 +94,7 @@ public class HTTPServiceGateway extends UdoGateway {
     }
 
     public synchronized void register(String tag, URI uri) {
-        if (endpoints.containsKey(tag)) {
+        if (!endpoints.containsKey(tag)) {
             endpoints.put(tag, uri);
         }
     }
@@ -102,16 +107,36 @@ public class HTTPServiceGateway extends UdoGateway {
 
     public void start() throws InterruptedException {
 
+//        for(int i = 0;i<5;i++){
+//            endpoints.forEach(
+//                    (key, value) -> {
+//                        try {
+//                            Thread.sleep(30000);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        try {
+//                            System.out.println("fetching data...");
+//                            downLink(key, value.toString().getBytes());
+//                        } catch (IOException | InterruptedException e) {
+//                            // TODO Auto-generated catch block
+//                            e.printStackTrace();
+//                        }
+//
+//                    });
+//        }
+
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-        executor.scheduleAtFixedRate(
+        executor.scheduleWithFixedDelay(
             () -> {
                 try {
-                    System.out.println("fetching data...");
+
                     endpoints.forEach(
                         (key, value) -> {
                             try {
-                                downlink(key, value.toString().getBytes());
+                                System.out.println("fetching data...");
+                                downLink(key, value.toString().getBytes());
                             } catch (IOException | InterruptedException e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
@@ -122,24 +147,55 @@ public class HTTPServiceGateway extends UdoGateway {
                     throw new RuntimeException(ex);
                 }
             },
-            1,
-            1,
+            1L,
+            15L,
             TimeUnit.SECONDS);
-        //        TimeUnit.SECONDS.sleep(15L);
+          TimeUnit.SECONDS.sleep(15L);
 
-        executor.shutdown();
+//        executor.shutdown();
     }
 
     @Override
-    public void downlink(String tag, byte[] payload) throws IOException, InterruptedException {
+    public void downLink(String tag, byte[] payload) throws IOException, InterruptedException {
+        System.out.println("===============");
+        this.updateUdoByPolling(tag, "{name:chris}".getBytes());
 
-        HttpRequest request =
-            httpRequestBuilder
+//        HttpRequest request =
+//            httpRequestBuilder
+//                    .GET()
+//                .uri(URI.create(new String(payload)))
+//                .build();
+//
+//        HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
+//
+//        this.updateUdoByPolling(tag, body.body().getBytes());
+    }
+
+    @Override
+    public void updateLink(String tag, byte[] payload, Map<Object,Object> data) throws IOException, InterruptedException {
+        HttpRequest request = httpRequestBuilder.POST(ofFormData(data))
                 .uri(URI.create(new String(payload)))
                 .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
+        System.out.println(response.statusCode());
 
-        this.updateUdoByPolling(tag, body.body().getBytes());
+        // print response body
+        System.out.println(response.body());
+        //this.updateUdoByPolling(tag, response.body().getBytes());
+
+    }
+
+    public static HttpRequest.BodyPublisher ofFormData(Map<Object, Object> data) {
+        var builder = new StringBuilder();
+        for (Map.Entry<Object, Object> entry : data.entrySet()) {
+            if (builder.length() > 0) {
+                builder.append("&");
+            }
+            builder.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));
+            builder.append("=");
+            builder.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
+        }
+        return HttpRequest.BodyPublishers.ofString(builder.toString());
     }
 }

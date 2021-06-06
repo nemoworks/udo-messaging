@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 
 public class PubSubTest {
 
-    MqttClient client1, client2;
+    MqttClient client1, client2,client3;
 
     UdoGateway udoGateway;
     ApplicationContext applicationContext;
@@ -34,17 +34,20 @@ public class PubSubTest {
         String clientid2 = UUID.randomUUID().toString();
         client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
 
+        String clientid3 = UUID.randomUUID().toString();
+        client3 = new MqttClient("tcp://test.mosquitto.org:1883", clientid3);
+
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         client1.connect(options);
         client2.connect(options);
+        client3.connect(options);
         eventBus = new EventBus();
 
         udoGateway = new HTTPServiceGateway();
         eventBus.register(udoGateway);
-
 
     }
 
@@ -62,13 +65,13 @@ public class PubSubTest {
             System.out.println("subscriber====="+new String(payload.getPayload()));
         });
         Publisher publisher = new Publisher(client2);
-
+        Publisher publisher1 = new Publisher(client3);
          udo.setId(UUID.randomUUID().toString());
 
          int i = 0;
          while(i<10){
              publisher.publish("udo", "hello udo".getBytes());
-             publisher.publish("udo1", "hello udo11".getBytes());
+             publisher1.publish("udo", "hello udo11".getBytes());
              Thread.sleep(1000);
              i++;
          }
@@ -88,7 +91,7 @@ public class PubSubTest {
         eventBus.register(applicationContext);
         Udo udo = new Udo(null, null);
         udo.setId(UUID.randomUUID().toString());
-        Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo);
+        Pair<String, String> mqttTopic = applicationContext.getMqttTopic(applicationContext.getAppId(), udo.getId());
         applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
         applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
     }

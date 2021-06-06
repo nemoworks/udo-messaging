@@ -7,6 +7,8 @@ import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.*;
 
 import java.io.IOException;
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,9 +38,13 @@ public abstract class UdoGateway {
     protected UdoGateway() {
     }
 
-    // calling the service/device
-    public abstract void downlink(String tag, byte[] payload)
+    // pulling msg from the service/device
+    public abstract void downLink(String tag, byte[] payload)
         throws IOException, InterruptedException;
+
+    public abstract void updateLink(String tag, byte[] payload, Map<Object,Object> data)
+            throws  IOException,InterruptedException;
+
 
     //upadte udo by polling
     public void updateUdoByPolling(String tag, byte[] payload) {
@@ -54,13 +60,13 @@ public abstract class UdoGateway {
         eventBus.post(new SaveByUriEvent(EventType.SAVE_BY_URI, udo, uri));
     }
 
-    public void updateUdoByMqtt(String tag, byte[] payload) {
-//        System.out.println("update");
-//        Udo udo = new Udo();
-//        udo.setId("dsfwerf");
-        Udo udo = this.updateUdo(tag, payload);
-        eventBus.post(new SubscribeByMqttEvent(EventType.SUBSCRIBE_BY_MQTT, udo, null));
-    }
+//    public void updateUdoByMqtt(String tag, byte[] payload) {
+////        System.out.println("update");
+////        Udo udo = new Udo();
+////        udo.setId("dsfwerf");
+//        Udo udo = this.updateUdo(tag, payload);
+//        eventBus.post(new SubscribeByMqttEvent(EventType.SUBSCRIBE_BY_MQTT, udo, null));
+//    }
 
     public Udo updateUdo(String id, byte[] payload) {
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);

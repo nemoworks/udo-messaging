@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,9 +32,9 @@ public class HTTPServiceGateway extends UdoGateway {
 
     private final HttpClient client;
     private final Builder httpRequestBuilder =
-        HttpRequest.newBuilder()
-            .header("Content-Type", "application/json")
-            .timeout(Duration.ofMinutes(2));
+            HttpRequest.newBuilder()
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofMinutes(2));
 
 
     public ConcurrentHashMap<String, URI> getEndpoints() {
@@ -46,19 +47,19 @@ public class HTTPServiceGateway extends UdoGateway {
         super();
         endpoints = new ConcurrentHashMap<>();
         client =
-            HttpClient.newBuilder()
-                .version(Version.HTTP_1_1)
-                .followRedirects(Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(20))
-                .build();
+                HttpClient.newBuilder()
+                        .version(Version.HTTP_1_1)
+                        .followRedirects(Redirect.NORMAL)
+                        .connectTimeout(Duration.ofSeconds(20))
+                        .build();
     }
 
     HttpResponse<String> getRequestBody(byte[] payload) throws IOException, InterruptedException {
         HttpRequest request =
-            httpRequestBuilder
-                    .GET()
-                .uri(URI.create(new String(payload)))
-                .build();
+                httpRequestBuilder
+                        .GET()
+                        .uri(URI.create(new String(payload)))
+                        .build();
 
         return client.send(request, BodyHandlers.ofString());
     }
@@ -129,57 +130,57 @@ public class HTTPServiceGateway extends UdoGateway {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.scheduleWithFixedDelay(
-            () -> {
-                try {
+                () -> {
+                    try {
 
-                    endpoints.forEach(
-                        (key, value) -> {
-                            try {
-                                System.out.println("fetching data...");
-                                downLink(key, value.toString().getBytes());
-                            } catch (IOException | InterruptedException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        });
+                        endpoints.forEach(
+                                (key, value) -> {
+                                    try {
+                                        System.out.println("fetching data...");
+                                        downLink(key, value.toString().getBytes());
+                                    } catch (IOException | InterruptedException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
+                                    }
+                                });
 
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            },
-            1L,
-            15L,
-            TimeUnit.SECONDS);
-          TimeUnit.SECONDS.sleep(15L);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                },
+                15L,
+                15L,
+                TimeUnit.SECONDS);
+        TimeUnit.SECONDS.sleep(15L);
 
 //        executor.shutdown();
     }
 
     @Override
     public void downLink(String tag, byte[] payload) throws IOException, InterruptedException {
-        System.out.println("===============");
-        this.updateUdoByPolling(tag, "{name:chris}".getBytes());
+//        System.out.println("===============");
+//        this.updateUdoByPolling(tag, "{name:chris}".getBytes());
 
-//        HttpRequest request =
-//            httpRequestBuilder
-//                    .GET()
-//                .uri(URI.create(new String(payload)))
-//                .build();
-//
-//        HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
-//
-//        this.updateUdoByPolling(tag, body.body().getBytes());
+        System.out.println(new String(payload));
+        HttpRequest request =
+                httpRequestBuilder
+                        .GET()
+                        .uri(URI.create(new String(payload)))
+                        .build();
+
+        HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
+
+        this.updateUdoByPolling(tag, body.body().getBytes());
     }
 
     @Override
-    public void updateLink(String tag, byte[] payload, Map<Object,Object> data) throws IOException, InterruptedException {
+    public void updateLink(String tag, byte[] payload, Map<Object, Object> data) throws IOException, InterruptedException {
         HttpRequest request = httpRequestBuilder.POST(ofFormData(data))
                 .uri(URI.create(new String(payload)))
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());
-
         // print response body
         System.out.println(response.body());
         //this.updateUdoByPolling(tag, response.body().getBytes());

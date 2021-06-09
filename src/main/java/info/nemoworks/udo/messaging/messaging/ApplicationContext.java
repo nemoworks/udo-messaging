@@ -10,7 +10,10 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class ApplicationContext {
@@ -23,10 +26,11 @@ public class ApplicationContext {
 
     private final UdoGateway udoGateway;
 
+    private FilterRule filterRule;
+
     private static final String PREFIX_SUB = "sub";
     private static final String PREFIX_PUB = "pub";
     private static final String PREFIX_MsgManager = "app_";
-
 
     public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway) {
         this.publisher = publisher;
@@ -53,13 +57,16 @@ public class ApplicationContext {
     @Subscribe
     public void ackMessage(GatewayEvent gatewayEvent){
         Udo udo = (Udo) gatewayEvent.getSource();
+//        if(!filterRule.isEqual(filterRule)){
+//            return;
+//        }
         ApplicationContextCluster.getApplicationContextMap().get("app_demo").getValue1().forEach(udoId->{
-            if(!udo.getId().equals(udoId)){
+//            if(!udo.getId().equals(udoId)){
                 String topic = getMqttTopic("app_demo", udoId).getValue1();
                 Thread thread = Thread.currentThread();
                 System.out.println("thread====="+thread.getId());
                 this.publishMessage(topic,udo.getData().toString().getBytes());
-            }
+//            }
         });
 
     }
@@ -78,6 +85,7 @@ public class ApplicationContext {
             ApplicationContextCluster.addUdoId(appId, udo.getId());
         }
         subscriber.subscribe(getMqttTopic(appId, udo.getId()).getValue1(), (topic, payload) -> {
+
             String udoId = getUdoId(topic);
             payload.getPayload();
             Thread thread = Thread.currentThread();
@@ -93,4 +101,11 @@ public class ApplicationContext {
         return appId;
     }
 
+    public FilterRule getFilterRule() {
+        return filterRule;
+    }
+
+    public void setFilterRule(FilterRule filterRule) {
+        this.filterRule = filterRule;
+    }
 }

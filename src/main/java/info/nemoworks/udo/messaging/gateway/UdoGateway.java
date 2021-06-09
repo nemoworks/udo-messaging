@@ -20,7 +20,6 @@ public abstract class UdoGateway {
 
 //    private static final Logger logger = LoggerFactory.getLogger(UdoGateway.class);
 
-
     public enum UdoGatewayType {
         HTTP, MQTT
     }
@@ -35,8 +34,7 @@ public abstract class UdoGateway {
 
     private UdoGatewayType type;
 
-    protected UdoGateway() {
-    }
+    protected UdoGateway() {}
 
     // pulling msg from the service/device
     public abstract void downLink(String tag, byte[] payload)
@@ -59,14 +57,6 @@ public abstract class UdoGateway {
         udo.setUri(new String(uri));
         eventBus.post(new SaveByUriEvent(EventType.SAVE_BY_URI, udo, uri));
     }
-
-//    public void updateUdoByMqtt(String tag, byte[] payload) {
-////        System.out.println("update");
-////        Udo udo = new Udo();
-////        udo.setId("dsfwerf");
-//        Udo udo = this.updateUdo(tag, payload);
-//        eventBus.post(new SubscribeByMqttEvent(EventType.SUBSCRIBE_BY_MQTT, udo, null));
-//    }
 
     public Udo updateUdo(String id, byte[] payload) {
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);

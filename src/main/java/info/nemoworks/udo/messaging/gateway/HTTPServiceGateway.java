@@ -174,8 +174,8 @@ public class HTTPServiceGateway extends UdoGateway {
     }
 
     @Override
-    public void updateLink(String tag, byte[] payload, Map<Object, Object> data) throws IOException, InterruptedException {
-        HttpRequest request = httpRequestBuilder.POST(ofFormData(data))
+    public void updateLink(String tag, byte[] payload, String data) throws IOException, InterruptedException {
+        HttpRequest request = httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(data))
                 .uri(URI.create(new String(payload)))
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

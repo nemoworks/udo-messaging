@@ -34,7 +34,7 @@ public class K8sGateway extends UdoGateway{
     }
 
     @Override
-    public void updateLink(String tag, byte[] payload, Map<Object, Object> data) throws IOException, InterruptedException {
+    public void updateLink(String tag, byte[] payload, String data) throws IOException, InterruptedException {
 
     }
 }

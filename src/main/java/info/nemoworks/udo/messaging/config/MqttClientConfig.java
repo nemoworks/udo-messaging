@@ -6,12 +6,14 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 import java.util.UUID;
 
 @Configuration
 public class MqttClientConfig {
 	@Bean
+	@Scope("prototype")
 	public MqttClient mqttClient() throws MqttException {
 		String clientid = UUID.randomUUID().toString();
 		MqttClient client = null;

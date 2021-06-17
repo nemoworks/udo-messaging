@@ -40,7 +40,7 @@ public abstract class UdoGateway {
     public abstract void downLink(String tag, byte[] payload)
         throws IOException, InterruptedException;
 
-    public abstract void updateLink(String tag, byte[] payload, Map<Object,Object> data)
+    public abstract void updateLink(String tag, byte[] payload, String data)
             throws  IOException,InterruptedException;
 
 

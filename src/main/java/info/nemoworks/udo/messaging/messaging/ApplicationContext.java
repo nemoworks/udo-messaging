@@ -10,10 +10,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Component
 public class ApplicationContext {
@@ -61,12 +58,12 @@ public class ApplicationContext {
 //            return;
 //        }
         ApplicationContextCluster.getApplicationContextMap().get("app_demo").getValue1().forEach(udoId->{
-//            if(!udo.getId().equals(udoId)){
+            if(!udo.getId().equals(udoId)){
                 String topic = getMqttTopic("app_demo", udoId).getValue1();
                 Thread thread = Thread.currentThread();
                 System.out.println("thread====="+thread.getId());
                 this.publishMessage(topic,udo.getData().toString().getBytes());
-//            }
+            }
         });
 
     }
@@ -91,9 +88,10 @@ public class ApplicationContext {
             Thread thread = Thread.currentThread();
             System.out.println("thread====="+thread.getId());
             System.out.println("subscriber=====" + new String(payload.getPayload()));
-            JsonObject data = new Gson().fromJson(new String(payload.getPayload()), JsonObject.class);
-            HashMap<Object, Object> hashMap = new Gson().fromJson(data.toString(), HashMap.class);
-            udoGateway.updateLink(udoId, udo.getUri().getBytes(),hashMap);
+            Gson gson = new Gson();
+            JsonObject data = gson.fromJson(new String(payload.getPayload()), JsonObject.class);
+          //  HashMap<Object, Object> hashMap = new Gson().fromJson(data.toString(), HashMap.class);
+            udoGateway.updateLink(udoId, udo.getUri().getBytes(),gson.toJson(data));
         });
     }
 

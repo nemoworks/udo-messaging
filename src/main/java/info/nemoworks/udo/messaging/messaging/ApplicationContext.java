@@ -6,11 +6,12 @@ import com.google.gson.JsonObject;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.GatewayEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
 
 @Component
 public class ApplicationContext {
@@ -29,21 +30,24 @@ public class ApplicationContext {
     private static final String PREFIX_PUB = "pub";
     private static final String PREFIX_MsgManager = "app_";
 
-    public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway) {
+    public ApplicationContext(Publisher publisher, Subscriber subscriber, UdoGateway udoGateway)
+        throws IOException {
         this.publisher = publisher;
         this.subscriber = subscriber;
         this.udoGateway = udoGateway;
+        this.filterRule = new FilterRule(new String(
+            Files.readAllBytes(Paths.get("udo-messaging/src/resources/testRules.json"))));
     }
 
     public void setAppId(String appId) {
-        this.appId = PREFIX_MsgManager+appId;
+        this.appId = PREFIX_MsgManager + appId;
         ApplicationContextCluster.createApplicationContext(this);
     }
 
     // <pub_topic, sub_topic>
     public static Pair<String, String> getMqttTopic(String appId, String udoId) {
         return new Pair<>(PREFIX_PUB + "/" + appId + "/" + udoId
-                , PREFIX_SUB + "/" + appId+ "/" + udoId);
+            , PREFIX_SUB + "/" + appId + "/" + udoId);
     }
 
     private String getUdoId(String topic) {
@@ -52,19 +56,25 @@ public class ApplicationContext {
 
 
     @Subscribe
-    public void ackMessage(GatewayEvent gatewayEvent){
+    public void ackMessage(GatewayEvent gatewayEvent) {
         Udo udo = (Udo) gatewayEvent.getSource();
 //        if(!filterRule.isEqual(filterRule)){
 //            return;
 //        }
-        ApplicationContextCluster.getApplicationContextMap().get("app_demo").getValue1().forEach(udoId->{
-            if(!udo.getId().equals(udoId)){
-                String topic = getMqttTopic("app_demo", udoId).getValue1();
-                Thread thread = Thread.currentThread();
-                System.out.println("thread====="+thread.getId());
-                this.publishMessage(topic,udo.getData().toString().getBytes());
-            }
-        });
+        if (!filterRule.filteringEqual(udo)) {
+            System.out.println("Negative to filter Equal! " + "Udo Id: " + udo.getId());
+        } else if (!filterRule.filteringLarger(udo)) {
+            System.out.println("Negative to filter Larger! " + "Udo Id: " + udo.getId());
+        }
+        ApplicationContextCluster.getApplicationContextMap().get("app_demo").getValue1()
+            .forEach(udoId -> {
+                if (!udo.getId().equals(udoId)) {
+                    String topic = getMqttTopic("app_demo", udoId).getValue1();
+                    Thread thread = Thread.currentThread();
+                    System.out.println("thread=====" + thread.getId());
+                    this.publishMessage(topic, udo.getData().toString().getBytes());
+                }
+            });
 
     }
 
@@ -78,7 +88,8 @@ public class ApplicationContext {
     }
 
     public synchronized void subscribeMessage(String appId, Udo udo) throws MqttException {
-        if (!ApplicationContextCluster.getApplicationContextMap().get(appId).contains(udo.getId())) {
+        if (!ApplicationContextCluster.getApplicationContextMap().get(appId)
+            .contains(udo.getId())) {
             ApplicationContextCluster.addUdoId(appId, udo.getId());
         }
         subscriber.subscribe(getMqttTopic(appId, udo.getId()).getValue1(), (topic, payload) -> {
@@ -86,12 +97,18 @@ public class ApplicationContext {
             String udoId = getUdoId(topic);
             payload.getPayload();
             Thread thread = Thread.currentThread();
-            System.out.println("thread====="+thread.getId());
+            System.out.println("thread=====" + thread.getId());
             System.out.println("subscriber=====" + new String(payload.getPayload()));
             Gson gson = new Gson();
-            JsonObject data = gson.fromJson(new String(payload.getPayload()), JsonObject.class);
-          //  HashMap<Object, Object> hashMap = new Gson().fromJson(data.toString(), HashMap.class);
-            udoGateway.updateLink(udoId, udo.getUri().getBytes(),gson.toJson(data));
+            try {
+                JsonObject data = gson.fromJson(new String(payload.getPayload()), JsonObject.class);
+                udoGateway.updateLink(udoId, udo.getUri().getBytes(), gson.toJson(data));
+            } catch (Exception e) {
+                System.out.println("Data is not in the Form of JSON!");
+//                return;
+            }
+            //  HashMap<Object, Object> hashMap = new Gson().fromJson(data.toString(), HashMap.class);
+
         });
     }
 

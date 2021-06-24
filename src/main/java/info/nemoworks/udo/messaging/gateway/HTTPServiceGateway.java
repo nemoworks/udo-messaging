@@ -4,7 +4,6 @@ import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,8 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import info.nemoworks.udo.model.event.SyncEvent;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,9 +29,9 @@ public class HTTPServiceGateway extends UdoGateway {
 
     private final HttpClient client;
     private final Builder httpRequestBuilder =
-            HttpRequest.newBuilder()
-                    .header("Content-Type", "application/json")
-                    .timeout(Duration.ofMinutes(2));
+        HttpRequest.newBuilder()
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofMinutes(2));
 
 
     public ConcurrentHashMap<String, URI> getEndpoints() {
@@ -47,19 +44,19 @@ public class HTTPServiceGateway extends UdoGateway {
         super();
         endpoints = new ConcurrentHashMap<>();
         client =
-                HttpClient.newBuilder()
-                        .version(Version.HTTP_1_1)
-                        .followRedirects(Redirect.NORMAL)
-                        .connectTimeout(Duration.ofSeconds(20))
-                        .build();
+            HttpClient.newBuilder()
+                .version(Version.HTTP_1_1)
+                .followRedirects(Redirect.NORMAL)
+                .connectTimeout(Duration.ofSeconds(20))
+                .build();
     }
 
     HttpResponse<String> getRequestBody(byte[] payload) throws IOException, InterruptedException {
         HttpRequest request =
-                httpRequestBuilder
-                        .GET()
-                        .uri(URI.create(new String(payload)))
-                        .build();
+            httpRequestBuilder
+                .GET()
+                .uri(URI.create(new String(payload)))
+                .build();
 
         return client.send(request, BodyHandlers.ofString());
     }
@@ -74,14 +71,16 @@ public class HTTPServiceGateway extends UdoGateway {
                 case SAVE_BY_URI:
                     HttpResponse<String> uriBody = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
-                            gatewayEvent.getPayload());
+                        gatewayEvent.getPayload());
                     break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri));
                     break;
                 case UPDATE:
-                    HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
-                    this.updateUdoByPolling(udo.getId(), body.body().getBytes());
+                    if (gatewayEvent.getPayload() != null) {
+                        HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
+                        this.updateUdoByPolling(udo.getId(), body.body().getBytes());
+                    }
                     break;
                 case DELETE:
                     this.unregister(udo.getId(), new URI(udo.uri));
@@ -130,27 +129,27 @@ public class HTTPServiceGateway extends UdoGateway {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.scheduleWithFixedDelay(
-                () -> {
-                    try {
+            () -> {
+                try {
 
-                        endpoints.forEach(
-                                (key, value) -> {
-                                    try {
-                                        System.out.println("fetching data...");
-                                        downLink(key, value.toString().getBytes());
-                                    } catch (IOException | InterruptedException e) {
-                                        // TODO Auto-generated catch block
-                                        e.printStackTrace();
-                                    }
-                                });
+                    endpoints.forEach(
+                        (key, value) -> {
+                            try {
+                                System.out.println("fetching data...");
+                                downLink(key, value.toString().getBytes());
+                            } catch (IOException | InterruptedException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        });
 
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                },
-                15L,
-                15L,
-                TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            },
+            15L,
+            15L,
+            TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(15L);
 
 //        executor.shutdown();
@@ -163,10 +162,10 @@ public class HTTPServiceGateway extends UdoGateway {
 
         System.out.println(new String(payload));
         HttpRequest request =
-                httpRequestBuilder
-                        .GET()
-                        .uri(URI.create(new String(payload)))
-                        .build();
+            httpRequestBuilder
+                .GET()
+                .uri(URI.create(new String(payload)))
+                .build();
 
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
 
@@ -174,10 +173,11 @@ public class HTTPServiceGateway extends UdoGateway {
     }
 
     @Override
-    public void updateLink(String tag, byte[] payload, String data) throws IOException, InterruptedException {
+    public void updateLink(String tag, byte[] payload, String data)
+        throws IOException, InterruptedException {
         HttpRequest request = httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(data))
-                .uri(URI.create(new String(payload)))
-                .build();
+            .uri(URI.create(new String(payload)))
+            .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         System.out.println(response.statusCode());

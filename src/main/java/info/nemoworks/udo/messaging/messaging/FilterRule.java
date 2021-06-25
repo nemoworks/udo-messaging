@@ -104,7 +104,7 @@ public class FilterRule {
                 JsonObject udoJson = new Gson().fromJson(new Gson().toJson(udo), JsonObject.class);
                 if (!udoJson.has(key)) {
                     this.result = false;
-                } else if (!(udoJson.get(key).getAsInt() > this.largerThanValues
+                } else if (!(udoJson.get(key).getAsInt() >= this.largerThanValues
                     .get(key))) {
                     this.result = false;
                 }

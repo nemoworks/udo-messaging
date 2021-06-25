@@ -1,8 +1,6 @@
 package info.nemoworks.udo.messaging;
 
 import com.google.common.eventbus.EventBus;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.messaging.gateway.UdoGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
@@ -12,6 +10,8 @@ import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.UUID;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -84,6 +84,9 @@ public class PubSubTest {
 
     }
 
+    public String loadFromFile(String path) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(path)));
+    }
 
     @Test
     public void test_ApplicationContext_Pub_Sub() throws MqttException, IOException {
@@ -99,8 +102,13 @@ public class PubSubTest {
 //        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
 //        applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
         Udo ackUdo = new Udo();
-        JsonObject obj = new Gson().fromJson("{createdBy: who}", JsonObject.class);
-        ackUdo.setData(obj);
+        ackUdo.setCreatedBy("who");
+        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
+        ackUdo.setCreatedBy("nemoworks");
+        ackUdo.setCreatedOn(-1);
+        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
+        ackUdo.setCreatedBy("nemoworks");
+        ackUdo.setCreatedOn(0);
         applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
     }
 }

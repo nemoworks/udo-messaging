@@ -30,7 +30,7 @@ public class EventBusTest {
     public void testSubscribe() throws UdoServiceException, UdoNotExistException {
         Udo udo = new Udo(null, null);
         udo.setId("r9s_g3kB2maipzb7EIRb");
-        udo.uri = "http://localhost:8081/";
+//        udo.uri = "http://localhost:8081/";
         udoService.saveOrUpdateUdo(udo);
     }
 }

@@ -2,13 +2,11 @@ package info.nemoworks.udo.messaging;
 
 import com.google.common.eventbus.EventBus;
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
-import info.nemoworks.udo.messaging.gateway.UdoGateway;
+import info.nemoworks.udo.messaging.gateway.MQTTGateway;
 import info.nemoworks.udo.messaging.messaging.ApplicationContext;
 import info.nemoworks.udo.messaging.messaging.Publisher;
 import info.nemoworks.udo.messaging.messaging.Subscriber;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.event.EventType;
-import info.nemoworks.udo.model.event.GatewayEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,9 +21,9 @@ public class PubSubTest {
 
     MqttClient client1, client2, client3;
 
-    UdoGateway udoGateway;
+    HTTPServiceGateway udoGateway;
     ApplicationContext applicationContext;
-
+    MQTTGateway mqttGateway;
     EventBus eventBus;
 
     @BeforeEach
@@ -92,23 +90,23 @@ public class PubSubTest {
     public void test_ApplicationContext_Pub_Sub() throws MqttException, IOException {
         Publisher publisher = new Publisher(client2);
         Subscriber subscriber = new Subscriber(client1);
-        applicationContext = new ApplicationContext(publisher, subscriber, udoGateway);
-        applicationContext.setAppId("demo");
-//        eventBus.register(applicationContext);
-//        Udo udo = new Udo(null, null);
-//        udo.setId(UUID.randomUUID().toString());
-//        Pair<String, String> mqttTopic = applicationContext
-//            .getMqttTopic(applicationContext.getAppId(), udo.getId());
-//        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
-//        applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
-        Udo ackUdo = new Udo();
-        ackUdo.setCreatedBy("who");
-        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
-        ackUdo.setCreatedBy("nemoworks");
-        ackUdo.setCreatedOn(-1);
-        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
-        ackUdo.setCreatedBy("nemoworks");
-        ackUdo.setCreatedOn(0);
-        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
+//        applicationContext = new ApplicationContext(publisher, subscriber, udoGateway, mqttGateway);
+//        applicationContext.setAppId("demo");
+////        eventBus.register(applicationContext);
+////        Udo udo = new Udo(null, null);
+////        udo.setId(UUID.randomUUID().toString());
+////        Pair<String, String> mqttTopic = applicationContext
+////            .getMqttTopic(applicationContext.getAppId(), udo.getId());
+////        applicationContext.subscribeMessage(applicationContext.getAppId(), udo);
+////        applicationContext.publishMessage(mqttTopic.getValue1(), "asasasaxcasdcswd".getBytes());
+//        Udo ackUdo = new Udo();
+//        ackUdo.setCreatedBy("who");
+//        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
+//        ackUdo.setCreatedBy("nemoworks");
+//        ackUdo.setCreatedOn(-1);
+//        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
+//        ackUdo.setCreatedBy("nemoworks");
+//        ackUdo.setCreatedOn(0);
+//        applicationContext.ackMessage(new GatewayEvent(EventType.SYNC, ackUdo, null));
     }
 }

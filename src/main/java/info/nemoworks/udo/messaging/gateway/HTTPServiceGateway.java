@@ -2,6 +2,7 @@ package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.Subscribe;
 import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.UriType;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
 import java.io.IOException;
@@ -19,9 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -56,6 +54,7 @@ public class HTTPServiceGateway extends UdoGateway {
             httpRequestBuilder
                 .GET()
                 .uri(URI.create(new String(payload)))
+                .header("Referer", "postman")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -66,15 +65,18 @@ public class HTTPServiceGateway extends UdoGateway {
     public void gateWayEvent(GatewayEvent gatewayEvent) {
         try {
             Udo udo = (Udo) gatewayEvent.getSource();
+            if (udo.getUri().getUriType().equals(UriType.MQTT)) {
+                return;
+            }
             EventType contextId = gatewayEvent.getContextId();
             switch (contextId) {
                 case SAVE_BY_URI:
                     HttpResponse<String> uriBody = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
-                        gatewayEvent.getPayload());
+                        gatewayEvent.getPayload(), udo.getContextInfo(), udo.getUri().getUriType());
                     break;
                 case SAVE:
-                    this.register(udo.getId(), new URI(udo.uri));
+                    this.register(udo.getId(), new URI(udo.uri.getUri()));
                     break;
                 case UPDATE:
                     if (gatewayEvent.getPayload() != null) {
@@ -83,7 +85,7 @@ public class HTTPServiceGateway extends UdoGateway {
                     }
                     break;
                 case DELETE:
-                    this.unregister(udo.getId(), new URI(udo.uri));
+                    this.unregister(udo.getId(), new URI(udo.uri.getUri()));
                     break;
                 default:
                     break;
@@ -126,41 +128,38 @@ public class HTTPServiceGateway extends UdoGateway {
 //                    });
 //        }
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+//        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+//
+//        executor.scheduleWithFixedDelay(
+//            () -> {
+//                try {
 
-        executor.scheduleWithFixedDelay(
-            () -> {
+        endpoints.forEach(
+            (key, value) -> {
                 try {
-
-                    endpoints.forEach(
-                        (key, value) -> {
-                            try {
-                                System.out.println("fetching data...");
-                                downLink(key, value.toString().getBytes());
-                            } catch (IOException | InterruptedException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        });
-
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+                    System.out.println("fetching data...");
+                    downLink(key, value.toString().getBytes());
+                } catch (IOException | InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-            },
-            15L,
-            15L,
-            TimeUnit.SECONDS);
-        TimeUnit.SECONDS.sleep(15L);
+            });
+
+//                } catch (Exception ex) {
+//                    throw new RuntimeException(ex);
+//                }
+//            },
+//            15L,
+//            15L,
+//            TimeUnit.SECONDS);
+//        TimeUnit.SECONDS.sleep(15L);
 
 //        executor.shutdown();
     }
 
+    // downlink: 获取资源状态，向udo发送状态更新消息
     @Override
     public void downLink(String tag, byte[] payload) throws IOException, InterruptedException {
-//        System.out.println("===============");
-//        this.updateUdoByPolling(tag, "{name:chris}".getBytes());
-
-        System.out.println(new String(payload));
         HttpRequest request =
             httpRequestBuilder
                 .GET()
@@ -172,6 +171,7 @@ public class HTTPServiceGateway extends UdoGateway {
         this.updateUdoByPolling(tag, body.body().getBytes());
     }
 
+    // updatelink: 参数为topic中监听到的更新请求 向资源发送状态更新请求
     @Override
     public void updateLink(String tag, byte[] payload, String data)
         throws IOException, InterruptedException {
@@ -180,10 +180,9 @@ public class HTTPServiceGateway extends UdoGateway {
             .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        System.out.println(response.statusCode());
+//        System.out.println(response.statusCode());
         // print response body
-        System.out.println(response.body());
-        //this.updateUdoByPolling(tag, response.body().getBytes());
+//        System.out.println(response.body());
 
     }
 

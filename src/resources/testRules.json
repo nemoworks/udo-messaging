@@ -6,7 +6,23 @@
   ],
   "largerThanValues": [
     {
-      "createdOn": "0"
+      "createdOn": "6"
+    }
+  ],
+  "lessThanValues": [
+    {
+      "createdOn": "23"
+    }
+  ],
+  "timeLargerValues": [
+    {
+      "timeRange": "0000-01-01 08:00:00"
+    }
+  ],
+  "timeLessValues": [
+    {
+      "timeRange": "0000-01-01 19:00:00"
     }
   ]
 }
+

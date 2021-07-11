@@ -20,6 +20,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -74,9 +77,11 @@ public class HTTPServiceGateway extends UdoGateway {
                     HttpResponse<String> uriBody = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
                         gatewayEvent.getPayload(), udo.getContextInfo(), udo.getUri().getUriType());
+//                    this.createDefaultContext(udo);
                     break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri.getUri()));
+//                    this.createDefaultContext(udo);
                     break;
                 case UPDATE:
                     if (gatewayEvent.getPayload() != null) {
@@ -128,33 +133,37 @@ public class HTTPServiceGateway extends UdoGateway {
 //                    });
 //        }
 
-//        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-//
-//        executor.scheduleWithFixedDelay(
-//            () -> {
-//                try {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-        endpoints.forEach(
-            (key, value) -> {
+        executor.scheduleWithFixedDelay(
+            () -> {
                 try {
-                    System.out.println("fetching data...");
-                    downLink(key, value.toString().getBytes());
-                } catch (IOException | InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    endpoints.forEach(
+                        (key, value) -> {
+                            try {
+                                System.out.println("fetching data...");
+//                                downLink(key, value.toString().getBytes());
+                                try {
+                                    Thread.sleep(10000);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            } catch (Exception e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        });
+
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
                 }
-            });
+            },
+            15L,
+            15L,
+            TimeUnit.SECONDS);
+        TimeUnit.SECONDS.sleep(15L);
 
-//                } catch (Exception ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//            },
-//            15L,
-//            15L,
-//            TimeUnit.SECONDS);
-//        TimeUnit.SECONDS.sleep(15L);
-
-//        executor.shutdown();
+        executor.shutdown();
     }
 
     // downlink: 获取资源状态，向udo发送状态更新消息

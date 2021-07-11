@@ -49,7 +49,7 @@ public abstract class UdoGateway {
 
     //upadte udo by polling
     public void updateUdoByPolling(String tag, byte[] payload) {
-        log.info("update Udo " + new String(payload));
+        log.info("fetch Udo " + new String(payload) + "try to update");
         Udo udo = this.updateUdo(tag, payload);
         eventBus.post(new SyncEvent(EventType.SYNC, udo, null));
     }
@@ -69,5 +69,6 @@ public abstract class UdoGateway {
         udo.setId(id);
         return udo;
     }
+
 
 }

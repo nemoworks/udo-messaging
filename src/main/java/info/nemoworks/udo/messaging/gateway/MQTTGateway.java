@@ -30,24 +30,30 @@ public class MQTTGateway extends UdoGateway {
 
     private final ConcurrentHashMap<String, String> endpoints;
 
-    private String topic;
+    private String topicReceive;
+
+    private String topicSend;
 
     public MQTTGateway() throws MqttException {
         super();
         String clientid1 = UUID.randomUUID().toString();
-        MqttClient client1 = new MqttClient("tcp://broker.emqx.io:1883", clientid1);
+        MqttClient client1 = new MqttClient("tcp://210.28.134.32:1883", clientid1);
         String clientid2 = UUID.randomUUID().toString();
-        MqttClient client2 = new MqttClient("tcp://broker.emqx.io:1883", clientid2);
+        MqttClient client2 = new MqttClient("tcp://210.28.134.32:1883", clientid2);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
         client1.connect(options);
         client2.connect(options);
         this.publisher = new Publisher(client1);
         this.subscriber = new Subscriber(client2);
         this.endpoints = new ConcurrentHashMap<>();
-        this.topic = "topic/test";
+        this.topicReceive = "topic/pub";
+        this.topicSend = "topic/sub";
     }
 
     // 向udo发送状态更新请求
@@ -63,7 +69,17 @@ public class MQTTGateway extends UdoGateway {
                 try {
                     JsonObject update = gson
                         .fromJson(new String(data.getPayload()), JsonObject.class);
-                    this.updateUdoByPolling(tag, gson.toJson(update).getBytes());
+                    System.out
+                        .println("update id: " + update.getAsJsonPrimitive("id").getAsString());
+                    System.out.println("This thread id: " + tag);
+                    if (tag.equals(update.getAsJsonPrimitive("id").getAsString())
+                        || !update.getAsJsonPrimitive("id").getAsString()
+                        .equals("A2926242-2EE1-47EF-889B-AE470DAC6A21")) {
+                        System.out.println(
+                            "try to update: " + update.getAsJsonPrimitive("id").getAsString());
+                        this.updateUdoByPolling(update.getAsJsonPrimitive("id").getAsString(),
+                            gson.toJson(update).getBytes());
+                    }
                 } catch (Exception e) {
                     System.out.println("Data is not in the Form of JSON!");
                 }
@@ -106,14 +122,14 @@ public class MQTTGateway extends UdoGateway {
         EventType contextId = gatewayEvent.getContextId();
         switch (contextId) {
             case SAVE:
-                this.register(udo.getId(), this.topic);
+                this.register(udo.getId(), this.topicReceive);
                 break;
             case UPDATE:
 //                    this.updateLink(this.topic, new Gson().toJson(udo.getData()).getBytes(),
 //                        udo.getData().toString());
                 break;
             case DELETE:
-                this.unregister(udo.getId(), this.topic);
+                this.unregister(udo.getId(), this.topicReceive);
                 break;
             default:
                 break;

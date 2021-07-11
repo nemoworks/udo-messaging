@@ -79,14 +79,17 @@ public class MQTTGatewayTest {
     @Test
     public void testConnection() throws MqttException {
         String clientid4 = UUID.randomUUID().toString();
-        client4 = new MqttClient("tcp://broker.emqx.io:1883", clientid4);
+        client4 = new MqttClient("tcp://210.28.134.32:1883", clientid4);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
         client4.connect(options);
         Subscriber subscriber = new Subscriber(client4);
-        subscriber.subscribe("topic/test", (topic, payload) -> {
+        subscriber.subscribe("topic/pub", (topic, payload) -> {
             System.out.println("subscriber=====" + new String(payload.getPayload()));
         });
     }

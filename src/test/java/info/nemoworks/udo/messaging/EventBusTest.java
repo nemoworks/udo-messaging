@@ -6,6 +6,7 @@ import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.service.UdoService;
 import info.nemoworks.udo.service.UdoServiceException;
 import info.nemoworks.udo.storage.UdoNotExistException;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ public class EventBusTest {
     EventBus eventBus;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws IOException {
         httpServiceGateway = new HTTPServiceGateway();
         eventBus.register(httpServiceGateway);
     }

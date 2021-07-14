@@ -34,7 +34,7 @@ public class MQTTGateway extends UdoGateway {
 
     private String topicSend;
 
-    public MQTTGateway() throws MqttException {
+    public MQTTGateway() throws MqttException, IOException {
         super();
         String clientid1 = UUID.randomUUID().toString();
         MqttClient client1 = new MqttClient("tcp://210.28.134.32:1883", clientid1);
@@ -52,15 +52,15 @@ public class MQTTGateway extends UdoGateway {
         this.publisher = new Publisher(client1);
         this.subscriber = new Subscriber(client2);
         this.endpoints = new ConcurrentHashMap<>();
-        this.topicReceive = "topic/pub";
-        this.topicSend = "topic/sub";
+        this.topicReceive = "topic/pub/";
+        this.topicSend = "topic/sub/";
     }
 
     // 向udo发送状态更新请求
     @Override
     public void downLink(String tag, byte[] payload) throws IOException, InterruptedException {
         try {
-            subscriber.subscribe(new String(payload), (topic, data) -> {
+            subscriber.subscribe(this.topicReceive + new String(payload), (topic, data) -> {
                 data.getPayload();
                 Thread thread = Thread.currentThread();
                 System.out.println(
@@ -69,17 +69,16 @@ public class MQTTGateway extends UdoGateway {
                 try {
                     JsonObject update = gson
                         .fromJson(new String(data.getPayload()), JsonObject.class);
-                    System.out
-                        .println("update id: " + update.getAsJsonPrimitive("id").getAsString());
+
                     System.out.println("This thread id: " + tag);
-                    if (tag.equals(update.getAsJsonPrimitive("id").getAsString())
-                        || !update.getAsJsonPrimitive("id").getAsString()
-                        .equals("A2926242-2EE1-47EF-889B-AE470DAC6A21")) {
-                        System.out.println(
-                            "try to update: " + update.getAsJsonPrimitive("id").getAsString());
-                        this.updateUdoByPolling(update.getAsJsonPrimitive("id").getAsString(),
-                            gson.toJson(update).getBytes());
-                    }
+                    System.out.println("Data: " + update.toString());
+                    String uri = update.get("uri").getAsString();
+                    System.out.println(
+                        "Try to update, uri: " + uri);
+                    update.remove("uri");
+                    this.updateUdoByPolling(tag,
+                        gson.toJson(update).getBytes());
+//                    }
                 } catch (Exception e) {
                     System.out.println("Data is not in the Form of JSON!");
                 }
@@ -114,22 +113,55 @@ public class MQTTGateway extends UdoGateway {
     }
 
     @Subscribe
-    public void subscribeMessage(GatewayEvent gatewayEvent) {
+    public void subscribeMessage(GatewayEvent gatewayEvent)
+        throws IOException, InterruptedException {
         Udo udo = (Udo) gatewayEvent.getSource();
-        if (udo.getUri().getUriType().equals(UriType.HTTP)) {
-            return;
-        }
+
         EventType contextId = gatewayEvent.getContextId();
+        System.out.println("In MQTT Subscribing Udo...");
         switch (contextId) {
+            case SAVE_BY_URI:
+                if (udo.getUri().getUriType().equals(UriType.HTTP)) {
+                    return;
+                }
+                System.out.println("Detect Create Request...");
+                try {
+                    subscriber
+                        .subscribe(this.topicReceive + udo.getUri().getUri(), (topic, data) -> {
+                            data.getPayload();
+                            Thread thread = Thread.currentThread();
+                            System.out.println(
+                                "MQTT creating UDO=====" + new String(data.getPayload()));
+                            System.out.println("UdoId: " + udo.getId());
+                            Gson gson = new Gson();
+                            try {
+                                JsonObject content = gson
+                                    .fromJson(new String(data.getPayload()), JsonObject.class);
+                                System.out.println("In MQTTGateWay, Creating Udo by URI");
+                                this.updateUdoByUri(udo.getId(), content.toString().getBytes(),
+                                    gatewayEvent.getPayload(), udo.getContextInfo(),
+                                    udo.getUri().getUriType());
+//                                subscriber.unsubscribe(this.topicReceive + udo.getUri().getUri());
+                                this.register(udo.getId(), udo.getUri().getUri());
+                            } catch (Exception e) {
+                                System.out.println("Data is not in the Form of JSON!");
+                            }
+                        });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
             case SAVE:
-                this.register(udo.getId(), this.topicReceive);
+                this.register(udo.getId(), udo.getUri().getUri());
                 break;
             case UPDATE:
-//                    this.updateLink(this.topic, new Gson().toJson(udo.getData()).getBytes(),
-//                        udo.getData().toString());
+                if (udo.getUri().getUriType().equals(UriType.HTTP)) {
+                    return;
+                }
+                this.updateUdoByPolling(udo.getId(), udo.getData().toString().getBytes());
                 break;
             case DELETE:
-                this.unregister(udo.getId(), this.topicReceive);
+                this.unregister(udo.getId(), udo.getUri().getUri());
                 break;
             default:
                 break;
@@ -137,13 +169,16 @@ public class MQTTGateway extends UdoGateway {
 
     }
 
-    public synchronized void register(String udoi, String topic) {
+    private synchronized void register(String udoi, String topic)
+        throws IOException, InterruptedException {
         if (!endpoints.containsKey(udoi)) {
             endpoints.put(udoi, topic);
+            System.out.println("start subscribers...");
+            this.start();
         }
     }
 
-    public synchronized void unregister(String udoi, String topic) {
+    private synchronized void unregister(String udoi, String topic) {
         if (endpoints.containsKey(udoi)) {
             endpoints.remove(udoi, topic);
         }
@@ -160,11 +195,9 @@ public class MQTTGateway extends UdoGateway {
         try {
             System.out
                 .println(("MQTT publish To Human Resource========" + ":" + new String(data)));
-            this.publisher.publish(topic, data.getBytes());
+            this.publisher.publish(this.topicSend + topic, data.getBytes());
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
-
-
 }

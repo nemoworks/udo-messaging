@@ -2,6 +2,7 @@ package info.nemoworks.udo.messaging;
 
 import info.nemoworks.udo.messaging.gateway.HTTPServiceGateway;
 import info.nemoworks.udo.model.Udo;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ public class HTTPServiceGatewayTest {
     //  private MessagingManager messagingManager;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws IOException {
 
         // messagingManager = new MessagingManager();
 

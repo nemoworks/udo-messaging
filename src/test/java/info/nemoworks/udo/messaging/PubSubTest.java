@@ -27,7 +27,7 @@ public class PubSubTest {
     EventBus eventBus;
 
     @BeforeEach
-    public void setup() throws MqttException {
+    public void setup() throws MqttException, IOException {
 
         String clientid1 = UUID.randomUUID().toString();
         client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);

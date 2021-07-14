@@ -3,13 +3,16 @@ package info.nemoworks.udo.messaging.gateway;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.util.Config;
-
 import java.io.IOException;
-import java.util.Map;
 
-public class K8sGateway extends UdoGateway{
+public class K8sGateway extends UdoGateway {
+
+    public K8sGateway() throws IOException {
+    }
 
     public void getNodeList() throws IOException, ApiException {
         ApiClient apiClient = Config.defaultClient();
@@ -34,7 +37,8 @@ public class K8sGateway extends UdoGateway{
     }
 
     @Override
-    public void updateLink(String tag, byte[] payload, String data) throws IOException, InterruptedException {
+    public void updateLink(String tag, byte[] payload, String data)
+        throws IOException, InterruptedException {
 
     }
 }

@@ -24,4 +24,12 @@ public class Subscriber {
         client.subscribe(mqttTopic, listener);
     }
 
+    public void unsubscribe(String mqttTopic) throws MqttException {
+        if (!client.isConnected()) {
+            client.connect();
+            log.debug("client" + client.getClientId() + "connected");
+        }
+        client.unsubscribe(mqttTopic);
+    }
+
 }

@@ -10,8 +10,9 @@ import info.nemoworks.udo.model.UriType;
 import info.nemoworks.udo.model.event.EventType;
 import info.nemoworks.udo.model.event.GatewayEvent;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,9 @@ public class ApplicationContext {
 
     private final MQTTGateway mqttGateway;
 
-    private FilterRule filterRule;
+//    private FilterRule filterRule;
+
+    private Map<String, FilterRule> filterRuleMap;
 
     private static final String PREFIX_SUB = "sub";
     private static final String PREFIX_PUB = "pub";
@@ -50,8 +53,9 @@ public class ApplicationContext {
         this.httpSubscriber = httpSubscriber;
         this.httpServiceGateway = httpServiceGateway;
         this.mqttGateway = mqttGateway;
-        this.filterRule = new FilterRule(new String(
-            Files.readAllBytes(Paths.get("udo-messaging/src/resources/testRules.json"))));
+        this.filterRuleMap = new HashMap<>();
+//        this.filterRule = new FilterRule(new String(
+//            Files.readAllBytes(Paths.get("udo-messaging/src/resources/testRules.json"))));
     }
 
     public void setAppId(String appId) {
@@ -73,56 +77,72 @@ public class ApplicationContext {
     @Subscribe
     public void ackMessage(GatewayEvent gatewayEvent) {
         Udo udo = (Udo) gatewayEvent.getSource();
-//        if(!filterRule.isEqual(filterRule)){
-//            return;
-//        }
-        if (udo.getUri().getUriType().equals(UriType.HTTP)) {
-            if (!filterRule.filteringTimerLarger(udo)) {
-                System.out.println("Negative to filter Timer Larger! " + "Udo Id: " + udo.getId());
-            } else if (!filterRule.filteringTimerLess(udo)) {
-                System.out.println("Negative to filter Timer Less! " + "Udo Id: " + udo.getId());
-            }
-            if (!ApplicationContextCluster.getApplicationContextMap().containsKey("app_http")) {
+        if (gatewayEvent.getContextId().equals(EventType.UPDATE)) {
+            if (new String(gatewayEvent.getPayload()).equals("reject")) {
                 return;
             }
-            ApplicationContextCluster.getApplicationContextMap().get("app_http").getValue1()
-                .forEach(udoId -> {
-                    if (!udo.getId().equals(udoId)) {
-                        String topic = getMqttTopic("app_http", udoId).getValue1();
-                        Thread thread = Thread.currentThread();
-                        System.out.println("thread=====" + thread.getId());
-                        this.publishMessage(topic, udo.getData().toString().getBytes());
-                    }
-                });
-        } else if (udo.getUri().getUriType().equals(UriType.MQTT)) {
-            if (!filterRule.filteringTimerLarger(udo)) {
-                System.out.println("Negative to filter Timer Larger! " + "Udo Id: " + udo.getId());
-            } else if (!filterRule.filteringTimerLess(udo)) {
-                System.out.println("Negative to filter Timer Less! " + "Udo Id: " + udo.getId());
-            }
-            if (!gatewayEvent.getContextId().equals(EventType.UPDATE)) {
-                return;
-            }
-            if (!ApplicationContextCluster.getApplicationContextMap().containsKey("app_mqtt")) {
-                return;
-            }
-            ApplicationContextCluster.getApplicationContextMap().get("app_mqtt").getValue1()
-                .forEach(udoId -> {
-                    if (!udo.getId().equals(udoId)) {
-                        String topic = "topic/tosub";
-                        Thread thread = Thread.currentThread();
-                        System.out.println("thread=====" + thread.getId());
-                        try {
-                            System.out.println(("publish========" + ":" + new String(
-                                udo.getData().toString().getBytes())));
-                            this.mqttPublisher.publish(topic, udo.getData().toString().getBytes());
-                        } catch (MqttException e) {
-                            e.printStackTrace();
+            for (Pair<ApplicationContext, Set<String>> pair : ApplicationContextCluster
+                .getApplicationContextMap().values()) {
+                Set<String> udos = pair.getValue1();
+                if (udos.contains(udo.getId())) {
+                    udos.forEach(udoId -> {
+                        if (!udo.getId().equals(udoId)) {
+                            String topic = getMqttTopic("app_http", udoId).getValue1();
+                            Thread thread = Thread.currentThread();
+                            System.out.println("thread=====" + thread.getId());
+                            this.publishMessage(topic, udo.getData().toString().getBytes());
+                            try {
+                                JsonObject data = (JsonObject) udo.getData();
+                                data.addProperty("uri", udo.getUri().getUri());
+                                System.out.println(("publish========" + ":" + new String(
+                                    data.toString().getBytes())));
+                                this.mqttPublisher
+                                    .publish("topic/tosub/" + udoId,
+                                        data.toString().getBytes());
+                            } catch (MqttException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                });
+                    });
+                }
+            }
         }
-
+//        if (udo.getUri().getUriType().equals(UriType.HTTP)) {
+//            if (!ApplicationContextCluster.getApplicationContextMap().containsKey("app_http")) {
+//                return;
+//            }
+//            ApplicationContextCluster.getApplicationContextMap().get("app_http").getValue1()
+//                .forEach(udoId -> {
+//                    if (!udo.getId().equals(udoId)) {
+//                        String topic = getMqttTopic("app_http", udoId).getValue1();
+//                        Thread thread = Thread.currentThread();
+//                        System.out.println("thread=====" + thread.getId());
+//                        this.publishMessage(topic, udo.getData().toString().getBytes());
+//                    }
+//                });
+//        } else if (udo.getUri().getUriType().equals(UriType.MQTT)) {
+//            if (!gatewayEvent.getContextId().equals(EventType.UPDATE)) {
+//                return;
+//            }
+//            if (!ApplicationContextCluster.getApplicationContextMap().containsKey("app_mqtt")) {
+//                return;
+//            }
+//            ApplicationContextCluster.getApplicationContextMap().get("app_mqtt").getValue1()
+//                .forEach(udoId -> {
+//                    if (!udo.getId().equals(udoId)) {
+//                        String topic = "topic/tosub";
+//                        Thread thread = Thread.currentThread();
+//                        System.out.println("thread=====" + thread.getId());
+//                        try {
+//                            System.out.println(("publish========" + ":" + new String(
+//                                udo.getData().toString().getBytes())));
+//                            this.mqttPublisher.publish(topic, udo.getData().toString().getBytes());
+//                        } catch (MqttException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//        }
     }
 
     public void publishMessage(String topic, byte[] payload) {
@@ -157,26 +177,27 @@ public class ApplicationContext {
                         System.out.println("Data is not in the Form of JSON!");
                     }
                 });
-        } else {
-            mqttSubscriber
-                .subscribe("topic/tosub", (topic, payload) -> {
-                    payload.getPayload();
-                    Thread thread = Thread.currentThread();
-                    System.out.println("thread=====" + thread.getId());
-                    System.out.println("mqttSubscriber=====" + new String(payload.getPayload()));
-                    Gson gson = new Gson();
-                    try {
-                        JsonObject data = gson
-                            .fromJson(new String(payload.getPayload()), JsonObject.class);
-                        data.addProperty("id", udo.getId());
-                        mqttGateway
-                            .updateLink("topic/sub", udo.getUri().getUri().getBytes(),
-                                gson.toJson(data));
-                    } catch (Exception e) {
-                        System.out.println("Data is not in the Form of JSON!");
-                    }
-                });
         }
+        mqttSubscriber
+            .subscribe("topic/tosub/" + udo.getId(), (topic, payload) -> {
+                payload.getPayload();
+                Thread thread = Thread.currentThread();
+                System.out.println("thread=====" + thread.getId());
+                System.out.println("mqttSubscriber=====" + new String(payload.getPayload()));
+                Gson gson = new Gson();
+                try {
+                    JsonObject data = gson
+                        .fromJson(new String(payload.getPayload()), JsonObject.class);
+//                    data.addProperty("uri", udo.getUri().getUri());
+                    mqttGateway
+                        .updateLink(udo.getUri().getUri(),
+                            udo.getUri().getUri().getBytes(),
+                            gson.toJson(data));
+                } catch (Exception e) {
+                    System.out.println("Data is not in the Form of JSON!");
+                }
+            });
+
 
     }
 
@@ -184,11 +205,17 @@ public class ApplicationContext {
         return appId;
     }
 
-    public FilterRule getFilterRule() {
-        return filterRule;
+    public Map<String, FilterRule> getFilterRuleMap() {
+        return filterRuleMap;
     }
 
-    public void setFilterRule(FilterRule filterRule) {
-        this.filterRule = filterRule;
+    public FilterRule getFilterRule(String id) {
+        return this.filterRuleMap.get(id);
+    }
+
+    public void addFilterRule(String id, FilterRule filterRule) {
+        this.filterRuleMap.put(id, filterRule);
+        this.httpServiceGateway.addFilterRule(id, filterRule);
+        this.mqttGateway.addFilterRule(id, filterRule);
     }
 }

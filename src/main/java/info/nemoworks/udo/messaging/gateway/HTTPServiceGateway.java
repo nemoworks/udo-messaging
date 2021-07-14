@@ -41,7 +41,8 @@ public class HTTPServiceGateway extends UdoGateway {
 
     private final ConcurrentHashMap<String, URI> endpoints;
 
-    public HTTPServiceGateway() {
+
+    public HTTPServiceGateway() throws IOException {
         super();
         endpoints = new ConcurrentHashMap<>();
         client =
@@ -77,17 +78,16 @@ public class HTTPServiceGateway extends UdoGateway {
                     HttpResponse<String> uriBody = getRequestBody(gatewayEvent.getPayload());
                     this.updateUdoByUri(udo.getId(), uriBody.body().getBytes(),
                         gatewayEvent.getPayload(), udo.getContextInfo(), udo.getUri().getUriType());
-//                    this.createDefaultContext(udo);
                     break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri.getUri()));
-//                    this.createDefaultContext(udo);
                     break;
                 case UPDATE:
-                    if (gatewayEvent.getPayload() != null) {
-                        HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
-                        this.updateUdoByPolling(udo.getId(), body.body().getBytes());
-                    }
+//                    if (gatewayEvent.getPayload() != null) {
+//                        HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
+//                        this.updateUdoByPolling(udo.getId(), body.body().getBytes());
+//                    }
+                    this.updateUdoByPolling(udo.getId(), udo.getData().toString().getBytes());
                     break;
                 case DELETE:
                     this.unregister(udo.getId(), new URI(udo.uri.getUri()));

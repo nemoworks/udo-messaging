@@ -34,8 +34,8 @@ public class FilterRuleTest {
         data.addProperty("clock", "12:00:00");
         udo.setData(data);
         MQTTGateway mqttGateway = new MQTTGateway();
-        mqttGateway.addFilterRule("id", filterRule);
-        System.out.println(mqttGateway.filteringUdo(udo));
+//        mqttGateway.addFilterRule("id", filterRule);
+//        System.out.println(mqttGateway.filteringUdo(udo));
 //        System.out.println(filterRule.filteringEqual(udo));
 //        System.out.println(filterRule.filteringLarger(udo));
     }

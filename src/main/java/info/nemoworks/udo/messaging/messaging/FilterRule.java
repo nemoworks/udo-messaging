@@ -3,6 +3,7 @@ package info.nemoworks.udo.messaging.messaging;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.DistanceUtil;
 import info.nemoworks.udo.model.Udo;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,12 +33,15 @@ public class FilterRule {
 
     private Map<String, String> timerLess;
 
+    private Map<String, Float> distanceScope;
+
     public FilterRule(String jsonStr) {
         this.equalValues = new HashMap<>();
         this.largerThanValues = new HashMap<>();
         this.lessThanValues = new HashMap<>();
         this.timerLarger = new HashMap<>();
         this.timerLess = new HashMap<>();
+        this.distanceScope = new HashMap<>();
         this.filterString = jsonStr;
         JsonObject jsonObject = new Gson().fromJson(jsonStr, JsonObject.class);
         if (jsonObject.has("equalValues")) {
@@ -100,6 +104,18 @@ public class FilterRule {
                 }
             );
         }
+        if (jsonObject.has("distanceScopes")) {
+            JsonArray distanceScopeArray = jsonObject.getAsJsonArray("distanceScopes");
+            distanceScopeArray.forEach(
+                eVal -> {
+                    eVal.getAsJsonObject().entrySet().forEach(
+                        entry -> {
+                            this.distanceScope.put(entry.getKey(), entry.getValue().getAsFloat());
+                        }
+                    );
+                }
+            );
+        }
     }
 
     public void printEqualValues() {
@@ -128,6 +144,14 @@ public class FilterRule {
 
     public void printTimerLess() {
         timerLess.forEach(
+            (key, value) -> {
+                System.out.println(key + ": " + value);
+            }
+        );
+    }
+
+    public void printDistanceScope() {
+        distanceScope.forEach(
             (key, value) -> {
                 System.out.println(key + ": " + value);
             }
@@ -230,8 +254,8 @@ public class FilterRule {
         timerLarger.forEach(
             (key, value) -> {
                 JsonObject udoJson = new Gson().fromJson(new Gson().toJson(udo), JsonObject.class);
-                System.out.println(udoJson.toString());
-                System.out.println(key);
+//                System.out.println(udoJson.toString());
+//                System.out.println(key);
                 if (udoJson.has(key)) {
                     System.out.println("in judge...");
                     String uTime = udoJson.get(key).getAsString();
@@ -259,5 +283,36 @@ public class FilterRule {
         return filteringTimerLarger(udo) && filteringTimerLess(udo)
             && filteringLarger(udo) && filteringEqual(udo)
             && filteringLess(udo);
+    }
+
+    public boolean filteringDistance(Udo udo1, Udo udo2) {
+        this.result = true;
+        if (this.distanceScope.size() == 0) {
+            return true;
+        }
+        distanceScope.forEach(
+            (key, value) -> {
+                System.out.println("Check Distance Between " + udo1.getId() + " and "
+                    + udo2.getId() + " in scope: " + value + " m...");
+                float latitude1 = udo1.getData().getAsJsonObject().get("location")
+                    .getAsJsonObject().get("latitude").getAsFloat();
+                float longitude1 = udo1.getData().getAsJsonObject().get("location")
+                    .getAsJsonObject().get("longitude").getAsFloat();
+                float latitude2 = udo2.getData().getAsJsonObject().get("location")
+                    .getAsJsonObject().get("latitude").getAsFloat();
+                float longitude2 = udo2.getData().getAsJsonObject().get("location")
+                    .getAsJsonObject().get("longitude").getAsFloat();
+                float distance = DistanceUtil.getDistance(
+                    longitude1, latitude1, longitude2, latitude2
+                );
+                System.out.println("Real Distance: " + distance);
+                System.out.println("Scope Set: " + value);
+                if (distance > (float) value) {
+                    System.out.println("Distance Out of Scope..");
+                    this.result = false;
+                }
+            }
+        );
+        return this.result;
     }
 }

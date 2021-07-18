@@ -59,6 +59,8 @@ public class HTTPServiceGateway extends UdoGateway {
                 .GET()
                 .uri(URI.create(new String(payload)))
                 .header("Referer", "postman")
+                .header("Authorization",
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwMGVjMjYzNGNmMWE0NDcyODFjODA4ZGJlZGZjZjQyNSIsImlhdCI6MTYyNjI1MjY0MywiZXhwIjoxOTQxNjEyNjQzfQ.9jMpQDhXWsR4SKWKTSNFd-3JedK8whohOXHpi8276x4")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -69,6 +71,9 @@ public class HTTPServiceGateway extends UdoGateway {
     public void gateWayEvent(GatewayEvent gatewayEvent) {
         try {
             Udo udo = (Udo) gatewayEvent.getSource();
+            if (udo.getUri() == null) {
+                return;
+            }
             if (udo.getUri().getUriType().equals(UriType.MQTT)) {
                 return;
             }

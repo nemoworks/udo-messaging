@@ -68,6 +68,14 @@ public abstract class UdoGateway {
 
     public Udo updateUdo(String id, byte[] payload) {
         JsonObject data = new Gson().fromJson(new String(payload), JsonObject.class);
+        if (data != null) {
+            if (data.has("last_updated")) {
+                data.remove("last_updated");
+            }
+            if (data.has("last_changed")) {
+                data.remove("last_changed");
+            }
+        }
         Udo udo = new Udo(null, data);
         udo.setId(id);
         return udo;

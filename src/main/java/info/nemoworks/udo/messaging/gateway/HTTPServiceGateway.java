@@ -1,6 +1,8 @@
 package info.nemoworks.udo.messaging.gateway;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UriType;
 import info.nemoworks.udo.model.event.EventType;
@@ -53,19 +55,34 @@ public class HTTPServiceGateway extends UdoGateway {
                 .build();
     }
 
-    HttpResponse<String> getRequestBody(byte[] payload) throws IOException, InterruptedException {
+    public HttpResponse<String> getRequestBody(byte[] payload)
+        throws IOException, InterruptedException {
         HttpRequest request =
             httpRequestBuilder
                 .GET()
                 .uri(URI.create(new String(payload)))
                 .header("Referer", "postman")
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwMGVjMjYzNGNmMWE0NDcyODFjODA4ZGJlZGZjZjQyNSIsImlhdCI6MTYyNjI1MjY0MywiZXhwIjoxOTQxNjEyNjQzfQ.9jMpQDhXWsR4SKWKTSNFd-3JedK8whohOXHpi8276x4")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
     }
 
+    public HttpResponse<String> postRequestBody(byte[] payload, String data)
+        throws IOException, InterruptedException {
+        System.out.println("Post Payload: " + new String(payload));
+        System.out.println("Data: " + data);
+        HttpRequest request =
+            httpRequestBuilder
+                .POST(HttpRequest.BodyPublishers.ofString(data))
+                .uri(URI.create(new String(payload)))
+                .header("Authorization",
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
+                .build();
+
+        return client.send(request, BodyHandlers.ofString());
+    }
 
     @Subscribe
     public void gateWayEvent(GatewayEvent gatewayEvent) {
@@ -92,6 +109,21 @@ public class HTTPServiceGateway extends UdoGateway {
 //                        HttpResponse<String> body = getRequestBody(gatewayEvent.getPayload());
 //                        this.updateUdoByPolling(udo.getId(), body.body().getBytes());
 //                    }
+                    JsonObject data = (JsonObject) udo.getData();
+                    if (data.has("state")) {
+                        JsonObject entityId = new JsonObject();
+                        entityId.addProperty("entity_id", data.get("entity_id").getAsString());
+                        String postBody = new Gson().toJson(entityId);
+                        if (data.get("state").getAsString().equals("off")) {
+                            this.postRequestBody(
+                                "http://192.168.1.243:8123/api/services/fan/turn_off".getBytes(),
+                                postBody);
+                        } else {
+                            this.postRequestBody(
+                                "http://192.168.1.243:8123/api/services/fan/turn_on".getBytes(),
+                                postBody);
+                        }
+                    }
                     this.updateUdoByPolling(udo.getId(), udo.getData().toString().getBytes());
                     break;
                 case DELETE:

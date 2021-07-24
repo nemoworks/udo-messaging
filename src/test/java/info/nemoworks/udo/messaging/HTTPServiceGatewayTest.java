@@ -37,4 +37,11 @@ public class HTTPServiceGatewayTest {
         httpServiceGateway.start();
 
     }
+
+    @Test
+    public void testControlHass() throws IOException, InterruptedException {
+        httpServiceGateway
+            .postRequestBody("http://192.168.43.35:8123/api/services/fan/turn_off".getBytes(),
+                "{\"entity_id\": \"fan.zhimi_airpurifier_m1\"}");
+    }
 }

@@ -91,6 +91,19 @@ public class ApplicationContext {
                 payload.toString().getBytes());
         System.out.println(("publish To Register========" + ":" + new String(
             payload.toString().getBytes())));
+        payload.addProperty("destination", "all");
+        for (Pair<ApplicationContext, Set<String>> pair : ApplicationContextCluster
+            .getApplicationContextMap().values()) {
+            Set<String> udos = pair.getValue1();
+            if (udos.contains(udo.getId())) {
+                this.mqttPublisher
+                    .publish("topic/" + pair.getValue0().appId,
+                        payload.toString().getBytes());
+                System.out.println(
+                    ("publish To Context " + pair.getValue0().appId + "========" + ":" + new String(
+                        payload.toString().getBytes())));
+            }
+        }
     }
 
     public void publishDeleteMessage(String appId, String udoId) throws MqttException {

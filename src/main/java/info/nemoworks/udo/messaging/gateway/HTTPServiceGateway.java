@@ -22,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
@@ -103,6 +101,7 @@ public class HTTPServiceGateway extends UdoGateway {
                     break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri.getUri()));
+                    this.start();
                     break;
                 case UPDATE:
 //                    if (gatewayEvent.getPayload() != null) {
@@ -116,11 +115,11 @@ public class HTTPServiceGateway extends UdoGateway {
                         String postBody = new Gson().toJson(entityId);
                         if (data.get("state").getAsString().equals("off")) {
                             this.postRequestBody(
-                                "http://192.168.1.243:8123/api/services/fan/turn_off".getBytes(),
+                                "http://192.168.28.249:8123/api/services/fan/turn_off".getBytes(),
                                 postBody);
                         } else {
                             this.postRequestBody(
-                                "http://192.168.1.243:8123/api/services/fan/turn_on".getBytes(),
+                                "http://192.168.28.249:8123/api/services/fan/turn_on".getBytes(),
                                 postBody);
                         }
                     }
@@ -169,38 +168,34 @@ public class HTTPServiceGateway extends UdoGateway {
 //
 //                    });
 //        }
-
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-        executor.scheduleWithFixedDelay(
-            () -> {
+//
+//        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+//
+//        executor.scheduleWithFixedDelay(
+//            () -> {
+//                try {
+        endpoints.forEach(
+            (key, value) -> {
                 try {
-                    endpoints.forEach(
-                        (key, value) -> {
-                            try {
-                                System.out.println("fetching data...");
-//                                downLink(key, value.toString().getBytes());
-                                try {
-                                    Thread.sleep(10000);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            } catch (Exception e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        });
-
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+                    System.out.println("fetching data...");
+                    downLink(key, value.toString().getBytes());
+                    TimeUnit.SECONDS.sleep(10);
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-            },
-            15L,
-            15L,
-            TimeUnit.SECONDS);
-        TimeUnit.SECONDS.sleep(15L);
+            });
 
-        executor.shutdown();
+//                } catch (Exception ex) {
+//                    throw new RuntimeException(ex);
+//                }
+//            },
+//            15,
+//            15,
+//            TimeUnit.SECONDS);
+//        TimeUnit.SECONDS.sleep(15);
+//
+//        executor.shutdown();
     }
 
     // downlink: 获取资源状态，向udo发送状态更新消息
@@ -210,6 +205,8 @@ public class HTTPServiceGateway extends UdoGateway {
             httpRequestBuilder
                 .GET()
                 .uri(URI.create(new String(payload)))
+                .header("Authorization",
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
                 .build();
 
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
@@ -223,6 +220,8 @@ public class HTTPServiceGateway extends UdoGateway {
         throws IOException, InterruptedException {
         HttpRequest request = httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(data))
             .uri(URI.create(new String(payload)))
+            .header("Authorization",
+                "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
             .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 

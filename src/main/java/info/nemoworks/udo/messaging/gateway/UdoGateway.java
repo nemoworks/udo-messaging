@@ -75,6 +75,23 @@ public abstract class UdoGateway {
             if (data.has("last_changed")) {
                 data.remove("last_changed");
             }
+            if (data.has("attributes")) {
+                JsonObject attributes = data.get("attributes").getAsJsonObject();
+                if (attributes.has("speed_list")) {
+                    attributes.remove("speed_list");
+                }
+                if (attributes.has("preset_modes")) {
+                    attributes.remove("preset_modes");
+                }
+                if (attributes.has("preset_mode")) {
+                    attributes.remove("preset_mode");
+                }
+                if (attributes.has("speed")) {
+                    attributes.remove("speed");
+                }
+                data.remove("attributes");
+                data.add("attributes", attributes);
+            }
         }
         Udo udo = new Udo(null, data);
         udo.setId(id);

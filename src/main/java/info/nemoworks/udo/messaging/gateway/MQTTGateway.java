@@ -44,6 +44,7 @@ public class MQTTGateway extends UdoGateway {
         MqttClient client2 = new MqttClient("tcp://114.212.84.206:1883", clientid2);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_DEFAULT);
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         options.setUserName("udo-user");

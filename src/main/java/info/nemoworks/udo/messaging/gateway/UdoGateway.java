@@ -89,6 +89,9 @@ public abstract class UdoGateway {
                 if (attributes.has("speed")) {
                     attributes.remove("speed");
                 }
+                if (attributes.has("button_pressed")) {
+                    attributes.remove("button_pressed");
+                }
                 data.remove("attributes");
                 data.add("attributes", attributes);
             }

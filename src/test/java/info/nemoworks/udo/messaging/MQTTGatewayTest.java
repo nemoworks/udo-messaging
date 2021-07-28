@@ -27,17 +27,21 @@ public class MQTTGatewayTest {
     @BeforeEach
     public void setup() throws MqttException, IOException {
         String clientid1 = UUID.randomUUID().toString();
-        client1 = new MqttClient("tcp://test.mosquitto.org:1883", clientid1);
+        client1 = new MqttClient("tcp://114.212.84.206:1883", clientid1);
 
         String clientid2 = UUID.randomUUID().toString();
-        client2 = new MqttClient("tcp://test.mosquitto.org:1883", clientid2);
+        client2 = new MqttClient("tcp://114.212.84.206:1883", clientid2);
 
         String clientid3 = UUID.randomUUID().toString();
-        client3 = new MqttClient("tcp://test.mosquitto.org:1883", clientid3);
+        client3 = new MqttClient("tcp://114.212.84.206:1883", clientid3);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_DEFAULT);
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
+        options.setUserName("udo-user");
+        char[] password = "123456".toCharArray();
+        options.setPassword(password);
         client1.connect(options);
         client2.connect(options);
         mqttGateway = new MQTTGateway();
@@ -82,7 +86,9 @@ public class MQTTGatewayTest {
         client4 = new MqttClient("tcp://210.28.134.32:1883", clientid4);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_DEFAULT);
         options.setCleanSession(true);
+
         options.setConnectionTimeout(10);
         options.setUserName("udo-user");
         char[] password = "123456".toCharArray();

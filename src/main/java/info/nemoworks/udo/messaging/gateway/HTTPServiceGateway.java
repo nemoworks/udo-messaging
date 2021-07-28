@@ -61,7 +61,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .uri(URI.create(new String(payload)))
                 .header("Referer", "postman")
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -76,7 +76,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .POST(HttpRequest.BodyPublishers.ofString(data))
                 .uri(URI.create(new String(payload)))
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -101,7 +101,7 @@ public class HTTPServiceGateway extends UdoGateway {
                     break;
                 case SAVE:
                     this.register(udo.getId(), new URI(udo.uri.getUri()));
-                    this.start();
+//                    this.start();
                     break;
                 case UPDATE:
 //                    if (gatewayEvent.getPayload() != null) {
@@ -115,11 +115,11 @@ public class HTTPServiceGateway extends UdoGateway {
                         String postBody = new Gson().toJson(entityId);
                         if (data.get("state").getAsString().equals("off")) {
                             this.postRequestBody(
-                                "http://192.168.28.249:8123/api/services/fan/turn_off".getBytes(),
+                                "http://localhost:8123/api/services/fan/turn_off".getBytes(),
                                 postBody);
                         } else {
                             this.postRequestBody(
-                                "http://192.168.28.249:8123/api/services/fan/turn_on".getBytes(),
+                                "http://localhost:8123/api/services/fan/turn_on".getBytes(),
                                 postBody);
                         }
                     }
@@ -206,7 +206,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .GET()
                 .uri(URI.create(new String(payload)))
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
                 .build();
 
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
@@ -221,7 +221,7 @@ public class HTTPServiceGateway extends UdoGateway {
         HttpRequest request = httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(data))
             .uri(URI.create(new String(payload)))
             .header("Authorization",
-                "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NjRhNjBhNjc4NDU0NjA5OWRhNjY1NmRmNThhNzUyMCIsImlhdCI6MTYyNjk0NDA5NywiZXhwIjoxOTQyMzA0MDk3fQ._mBVNpZIRG6txF2WLqPO7XRLt-Q45Gv5_uXBPcpLJew")
+                "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
             .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 

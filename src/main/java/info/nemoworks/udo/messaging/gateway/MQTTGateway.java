@@ -117,8 +117,10 @@ public class MQTTGateway extends UdoGateway {
     public void subscribeMessage(GatewayEvent gatewayEvent)
         throws IOException, InterruptedException {
         Udo udo = (Udo) gatewayEvent.getSource();
-        if (udo.getUri() == null) {
-            return;
+        if (udo != null) {
+            if (udo.getUri() == null) {
+                return;
+            }
         }
         EventType contextId = gatewayEvent.getContextId();
         System.out.println("In MQTT Subscribing Udo...");
@@ -168,7 +170,7 @@ public class MQTTGateway extends UdoGateway {
                 this.updateUdoByPolling(udo.getId(), udo.getData().toString().getBytes());
                 break;
             case DELETE:
-                this.unregister(udo.getId(), udo.getUri().getUri());
+                this.unregister(new String(gatewayEvent.getPayload()));
                 break;
             default:
                 break;
@@ -185,9 +187,9 @@ public class MQTTGateway extends UdoGateway {
         }
     }
 
-    private synchronized void unregister(String udoi, String topic) {
+    private synchronized void unregister(String udoi) {
         if (endpoints.containsKey(udoi)) {
-            endpoints.remove(udoi, topic);
+            endpoints.remove(udoi);
         }
     }
 

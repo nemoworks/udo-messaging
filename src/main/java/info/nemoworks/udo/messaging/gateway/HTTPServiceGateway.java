@@ -86,11 +86,13 @@ public class HTTPServiceGateway extends UdoGateway {
     public void gateWayEvent(GatewayEvent gatewayEvent) {
         try {
             Udo udo = (Udo) gatewayEvent.getSource();
-            if (udo.getUri() == null) {
-                return;
-            }
-            if (udo.getUri().getUriType().equals(UriType.MQTT)) {
-                return;
+            if (udo != null) {
+                if (udo.getUri() == null) {
+                    return;
+                }
+                if (udo.getUri().getUriType().equals(UriType.MQTT)) {
+                    return;
+                }
             }
             EventType contextId = gatewayEvent.getContextId();
             switch (contextId) {
@@ -126,7 +128,7 @@ public class HTTPServiceGateway extends UdoGateway {
                     this.updateUdoByPolling(udo.getId(), udo.getData().toString().getBytes());
                     break;
                 case DELETE:
-                    this.unregister(udo.getId(), new URI(udo.uri.getUri()));
+                    this.unregister(new String(gatewayEvent.getPayload()));
                     break;
                 default:
                     break;
@@ -138,13 +140,15 @@ public class HTTPServiceGateway extends UdoGateway {
 
     public synchronized void register(String tag, URI uri) {
         if (!endpoints.containsKey(tag)) {
+            System.out.println(tag + " registered on httpServiceGateway");
             endpoints.put(tag, uri);
         }
     }
 
-    public synchronized void unregister(String tag, URI uri) {
+    public synchronized void unregister(String tag) {
         if (endpoints.containsKey(tag)) {
-            endpoints.remove(tag, uri);
+            System.out.println(tag + " unregistered on httpServiceGateway");
+            endpoints.remove(tag);
         }
     }
 

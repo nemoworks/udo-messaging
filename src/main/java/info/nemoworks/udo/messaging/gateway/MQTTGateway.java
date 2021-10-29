@@ -39,9 +39,9 @@ public class MQTTGateway extends UdoGateway {
     public MQTTGateway() throws MqttException, IOException {
         super();
         String clientid1 = UUID.randomUUID().toString();
-        MqttClient client1 = new MqttClient("tcp://114.212.84.206:1883", clientid1);
+        MqttClient client1 = new MqttClient("tcp://210.28.132.168:30609", clientid1);
         String clientid2 = UUID.randomUUID().toString();
-        MqttClient client2 = new MqttClient("tcp://114.212.84.206:1883", clientid2);
+        MqttClient client2 = new MqttClient("tcp://210.28.132.168:30609", clientid2);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_DEFAULT);
@@ -121,12 +121,15 @@ public class MQTTGateway extends UdoGateway {
             if (udo.getUri() == null) {
                 return;
             }
+            if (udo.getUri().getUriType().equals(UriType.NOTEXIST)) {
+                return;
+            }
         }
         EventType contextId = gatewayEvent.getContextId();
         System.out.println("In MQTT Subscribing Udo...");
         switch (contextId) {
             case SAVE_BY_URI:
-                if (udo.getUri().getUriType().equals(UriType.HTTP)) {
+                if (!udo.getUri().getUriType().equals(UriType.MQTT)) {
                     return;
                 }
                 System.out.println("Detect Create Request...");

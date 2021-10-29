@@ -30,13 +30,13 @@ public class PubSubTest {
     public void setup() throws MqttException, IOException {
 
         String clientid1 = UUID.randomUUID().toString();
-        client1 = new MqttClient("tcp://114.212.84.206:1883", clientid1);
+        client1 = new MqttClient("tcp://210.28.132.168:30609", clientid1);
 
         String clientid2 = UUID.randomUUID().toString();
-        client2 = new MqttClient("tcp://114.212.84.206:1883", clientid2);
+        client2 = new MqttClient("tcp://210.28.132.168:30609", clientid2);
 
         String clientid3 = UUID.randomUUID().toString();
-        client3 = new MqttClient("tcp://114.212.84.206:1883", clientid3);
+        client3 = new MqttClient("tcp://210.28.132.168:30609", clientid3);
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);

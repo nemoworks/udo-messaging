@@ -17,7 +17,7 @@ public class MqttClientConfig {
     public MqttClient mqttClient() throws MqttException {
         String clientid = UUID.randomUUID().toString();
         MqttClient client = null;
-        client = new MqttClient("tcp://114.212.84.206:1883", clientid);
+        client = new MqttClient("tcp://210.28.132.168:30609", clientid);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setUserName("udo-user");
         char[] password = "123456".toCharArray();

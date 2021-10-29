@@ -61,7 +61,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .uri(URI.create(new String(payload)))
                 .header("Referer", "postman")
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJlNmU2NzdhM2ZmMmU0YjM1YTg0YmNlN2Y3ZDU5YTEwMiIsImlhdCI6MTYzNTQ4ODg3NywiZXhwIjoxOTUwODQ4ODc3fQ.4QXAKdRe2xXP27aWuifQ-ROD3fCo6iI2n7mU_Qef7hI")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -76,7 +76,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .POST(HttpRequest.BodyPublishers.ofString(data))
                 .uri(URI.create(new String(payload)))
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJlNmU2NzdhM2ZmMmU0YjM1YTg0YmNlN2Y3ZDU5YTEwMiIsImlhdCI6MTYzNTQ4ODg3NywiZXhwIjoxOTUwODQ4ODc3fQ.4QXAKdRe2xXP27aWuifQ-ROD3fCo6iI2n7mU_Qef7hI")
                 .build();
 
         return client.send(request, BodyHandlers.ofString());
@@ -117,11 +117,11 @@ public class HTTPServiceGateway extends UdoGateway {
                         String postBody = new Gson().toJson(entityId);
                         if (data.get("state").getAsString().equals("off")) {
                             this.postRequestBody(
-                                "http://localhost:8123/api/services/fan/turn_off".getBytes(),
+                                "http://192.168.28.92:8122/api/services/fan/turn_off".getBytes(),
                                 postBody);
                         } else {
                             this.postRequestBody(
-                                "http://localhost:8123/api/services/fan/turn_on".getBytes(),
+                                "http://192.168.28.92:8122/api/services/fan/turn_on".getBytes(),
                                 postBody);
                         }
                     }
@@ -210,7 +210,7 @@ public class HTTPServiceGateway extends UdoGateway {
                 .GET()
                 .uri(URI.create(new String(payload)))
                 .header("Authorization",
-                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
+                    "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJlNmU2NzdhM2ZmMmU0YjM1YTg0YmNlN2Y3ZDU5YTEwMiIsImlhdCI6MTYzNTQ4ODg3NywiZXhwIjoxOTUwODQ4ODc3fQ.4QXAKdRe2xXP27aWuifQ-ROD3fCo6iI2n7mU_Qef7hI")
                 .build();
 
         HttpResponse<String> body = client.send(request, BodyHandlers.ofString());
@@ -225,7 +225,7 @@ public class HTTPServiceGateway extends UdoGateway {
         HttpRequest request = httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(data))
             .uri(URI.create(new String(payload)))
             .header("Authorization",
-                "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1YTg2OGQ4YmY1MWU0NGU5ODNkNWU0YjhjNmQ3YjNmNyIsImlhdCI6MTYyNzQ1MDg2NywiZXhwIjoxOTQyODEwODY3fQ.fLKrECOCoijqE6RNJwARiFAIMq1XbdMDzjAzsxpVYrc")
+                "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJlNmU2NzdhM2ZmMmU0YjM1YTg0YmNlN2Y3ZDU5YTEwMiIsImlhdCI6MTYzNTQ4ODg3NywiZXhwIjoxOTUwODQ4ODc3fQ.4QXAKdRe2xXP27aWuifQ-ROD3fCo6iI2n7mU_Qef7hI")
             .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 

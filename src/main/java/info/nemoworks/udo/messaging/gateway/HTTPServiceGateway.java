@@ -117,11 +117,11 @@ public class HTTPServiceGateway extends UdoGateway {
                         String postBody = new Gson().toJson(entityId);
                         if (data.get("state").getAsString().equals("off")) {
                             this.postRequestBody(
-                                "http://192.168.28.92:8122/api/services/fan/turn_off".getBytes(),
+                                "http://192.168.80.138:8122/api/services/fan/turn_off".getBytes(),
                                 postBody);
                         } else {
                             this.postRequestBody(
-                                "http://192.168.28.92:8122/api/services/fan/turn_on".getBytes(),
+                                "http://192.168.80.138:8122/api/services/fan/turn_on".getBytes(),
                                 postBody);
                         }
                     }
